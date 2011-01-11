@@ -1,5 +1,5 @@
 -module(config).
--export([read_config/1]).
+
 -export([get_smtp_server_name/1, get_pop3_server_name/1]).
 -export([get_smtp_port/1, get_pop3_port/1]).
 -export([get_starting_smtp/1, get_starting_pop3/1]).
