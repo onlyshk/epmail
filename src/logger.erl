@@ -36,10 +36,7 @@ create_log(LoggerPath) ->
     end.
 
 destroy_log() ->
-    dets:close(loggerDisk).
-
-%log_to_txt(DbName) ->
-    
+    dets:close(loggerDisk).    
 %
 
 %
@@ -48,8 +45,8 @@ destroy_log() ->
 add_log(Text) ->
     Time = time(),
     Date = date(),
-    Space = fun () -> " " end,
-    gen_server:call(?MODULE, {add_log,Date, Time, Space, Text}).
+    Space = " ",
+    gen_server:call(?MODULE, {add_log, {Time, Date, Space, Text}}).
 %
 
 %
@@ -63,8 +60,8 @@ init(LoggerPath) ->
 terminate(_Reason, _LoopData) ->
     destroy_log().
 
-handle_call({add_log, Date, Time, Space, Text }, _From, LoopData) ->
-    Reply = dets:insert(loggerDisk, {Date, Time, Space, Text}),
+handle_call({add_log, {Time, Date, Space, Text} }, _From, LoopData) ->
+    Reply = dets:insert(loggerDisk, {Time, Date, Space, Text}),
     {reply, Reply, LoopData}.
 
 handle_cast(stop, LoopData) ->
