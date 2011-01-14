@@ -1,3 +1,11 @@
+%%%-------------------------------------------------------------------
+%%% @author  <Kuleshov Alexander>
+%%% @copyright (C) 2011, 
+%%% @doc
+%%%
+%%% @end
+%%% Created : 13 Jan 2011 by  <kuleshovmail@gmail.com>
+%%%-------------------------------------------------------------------
 -module(logger).
 
 -author('kuleshovmail@gmail.com').
@@ -9,7 +17,7 @@
 -export([start_link/0, stop/0]).
 -export([handle_call/3, handle_cast/2, handle_info/2]).
 -export([code_change/3]).
--export([add_log/1]).
+-export([add_log/1, db_backup/0]).
 -export([terminate/2]).
 
 %
@@ -17,7 +25,12 @@
 %
 start_link() ->
     LoggerPath = config:get_log_path(config),
-    gen_server:start_link({local, ?MODULE}, ?MODULE, LoggerPath, []).
+    case LoggerPath of
+	 '_' ->
+	    stop;
+          _  ->
+	    gen_server:start_link({local, ?MODULE}, ?MODULE, LoggerPath, [])
+    end.
 
 stop() ->
     io:format("Logger server stop ~n "),
@@ -35,6 +48,15 @@ create_log(LoggerPath) ->
 	    Reason
     end.
 
+db_backup() ->
+    Fun = fun( Object, Acc ) -> [Object | Acc] end,
+    List = dets:foldl( Fun, [],  loggerDisk),
+
+    {ok, F} = file:open("log.txt", [append]),
+    file:write(F, [io_lib:format("~4..0B-~2..0B-~2..0B ~2..0B:~2..0B:~2..0B ~s~n",
+    			    [YYYY,M,D, HH,MM,SS, Comment]) || {{HH,MM,SS},{YYYY,M,D},Comment} <- List ]),
+    file:close(F).
+     
 destroy_log() ->
     dets:close(loggerDisk).    
 %
@@ -45,8 +67,7 @@ destroy_log() ->
 add_log(Text) ->
     Time = time(),
     Date = date(),
-    Space = " ",
-    gen_server:call(?MODULE, {add_log, {Time, Date, Space, Text}}).
+    gen_server:call(?MODULE, {add_log, {Time, Date, Text}}).
 %
 
 %
@@ -55,13 +76,18 @@ add_log(Text) ->
 init(LoggerPath) ->
     io:format("Logger server start ~n "),
     create_log(LoggerPath),
+
+    {ok, F} = file:open("log.txt", [append]),
+    file:write(F, " Time        Date   Error \n"),
+    file:close(F),
+
     {ok, null}.
 
 terminate(_Reason, _LoopData) ->
     destroy_log().
 
-handle_call({add_log, {Time, Date, Space, Text} }, _From, LoopData) ->
-    Reply = dets:insert(loggerDisk, {Time, Date, Space, Text}),
+handle_call({add_log, {Time, Date, Text} }, _From, LoopData) ->
+    Reply = dets:insert(loggerDisk, {Time, Date, Text}),
     {reply, Reply, LoopData}.
 
 handle_cast(stop, LoopData) ->

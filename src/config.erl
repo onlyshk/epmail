@@ -1,8 +1,18 @@
+%%%-------------------------------------------------------------------
+%%% @author  <Kuleshov Alexander>
+%%% @copyright (C) 2011, 
+%%% @doc
+%%%
+%%% @end
+%%% Created : 10 Jan 2011 by  <kuleshovmail@gmail.com>
+%%%-------------------------------------------------------------------
 -module(config).
 
+-export([read_config/1]).
 -export([get_smtp_server_name/1, get_pop3_server_name/1]).
 -export([get_smtp_port/1, get_pop3_port/1]).
 -export([get_starting_smtp/1, get_starting_pop3/1]).
+-export([get_log_path/1]).
 
 -author('kuleshovmail@gmail.com').
 -vsn('0.1').
@@ -106,4 +116,13 @@ get_starting_pop3(ConfigPath) ->
     [_ | T ] = ServerName,
     list_to_atom(lists:nth(1,T)).
 
-
+%
+% Function get log file path
+%
+get_log_path([]) ->
+    [];
+get_log_path(ConfigPath) ->
+    ConfigText = read_config(ConfigPath),
+    ServerName = string:tokens(lists:nth(7,ConfigText), " : "),
+    [_ | T ] = ServerName,
+    list_to_atom(lists:nth(1,T)).
