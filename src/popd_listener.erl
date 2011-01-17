@@ -16,44 +16,54 @@
 
 -export([accept/1]).
 
--define(SERVER, ?MODULE). 
+-record(state, {
+                listener      % Listening socket
+               }).
+
+-define(SERVER, ?MODULE).
 
 start_link()  ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+
+accept(Socket) ->
+    case gen_tcp:accept(Socket) of
+	{ok, Sock} ->
+	     gen_server:cast(?SERVER, {create_socket, Sock}),	     
+	     accept(Socket);
+	{error, Reason} ->
+	    Reason
+        end.
 
 stop() ->
     io:format("Pop3 server stop! \n "),
     gen_server:cast(?MODULE, stop).
 
-accept(Socket) ->
-    case gen_tcp:accept(Socket) of
-	{ok, S} ->
-	    gen_tcp:send(S, "Connection from POP3 server OK+ \n"),
-        {error, Reason} ->
-	    Reason
-        end.
 % 
 % Callback functions
 %
 init([]) ->
     Port = 110,
     Opts = [binary, {reuseaddr, true},
-            {keepalive, true}, {backlog, 30}, {active, false}],
+            {keepalive, false}, {backlog, 30}, {active, false}],
     
     case gen_tcp:listen(Port, Opts) of
 	 {ok, ListenSocket} ->
-	    spawn(?MODULE, accept, [ListenSocket]);
-	 {error, Reason} ->
-	    Reason
-    end,
-    {ok, null}.
+              spawn(?MODULE, accept, [ListenSocket]),
+	      {ok, #state{ listener = ListenSocket}};
+         {error, Reason} ->
+	     Reason
+    end.
 
 handle_call(_Request, _From, State) ->
     Reply = ok,
     {reply, Reply, State}.
 
 handle_cast(stop, State) ->
-    {stop, normal, State}.
+    {stop, normal, State};
+
+handle_cast({create_socket, Socket}, State) ->
+    gen_tcp:send(Socket, "Test message"),
+    {noreply, State}.
 
 handle_info(_Info, State) ->
     {noreply, State}.
@@ -62,7 +72,8 @@ handle_info(_Info, State) ->
 %
 % terminate server
 %
-terminate(_Reason, _State) ->
+terminate(_Reason, State) ->
+    gen_tcp:close(State#state.listener),
     ok.
 
 %
@@ -71,20 +82,3 @@ terminate(_Reason, _State) ->
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 %
-
-%
-% Reply
-%
-reply_line(ok, "") ->
-    "+OK\r\n";
-
-reply_line(ok, Text) ->
-    ["+OK ", Text, "\r\n"];
-
-reply_line(err, "") ->
-    "-ERR\r\n";
-
-reply_line(err, Text) ->
-    ["-ERR ", Text, "\r\n"].
-%
-
