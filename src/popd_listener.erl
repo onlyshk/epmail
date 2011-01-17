@@ -28,11 +28,11 @@ start_link()  ->
 accept(Socket) ->
     case gen_tcp:accept(Socket) of
 	{ok, Sock} ->
-	     gen_server:cast(?SERVER, {create_socket, Sock}),	     
+	     popd:start_link([Sock]),
 	     accept(Socket);
 	{error, Reason} ->
 	    Reason
-        end.
+    end.
 
 stop() ->
     io:format("Pop3 server stop! \n "),
@@ -59,11 +59,7 @@ handle_call(_Request, _From, State) ->
     {reply, Reply, State}.
 
 handle_cast(stop, State) ->
-    {stop, normal, State};
-
-handle_cast({create_socket, Socket}, State) ->
-    gen_tcp:send(Socket, "Test message"),
-    {noreply, State}.
+    {stop, normal, State}.
 
 handle_info(_Info, State) ->
     {noreply, State}.
