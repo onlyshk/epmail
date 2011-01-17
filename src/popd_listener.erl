@@ -15,9 +15,11 @@
 	 terminate/2, code_change/3]).
 
 -export([accept/1]).
+-export([receive_loop/1]).
 
 -record(state, {
-                listener      % Listening socket
+	        % listen socket
+                listener 
                }).
 
 -define(SERVER, ?MODULE).
@@ -28,12 +30,27 @@ start_link()  ->
 accept(Socket) ->
     case gen_tcp:accept(Socket) of
 	{ok, Sock} ->
-	     popd:start_link([Sock]),
+	     spawn(?MODULE, receive_loop, [Sock]),
 	     accept(Socket);
 	{error, Reason} ->
 	    Reason
     end.
 
+receive_loop(Socket) ->
+    case gen_tcp:recv(Socket, 0) of
+	 {ok, Data} ->
+	    case Data of
+		<<"q\r\n">> ->
+	          gen_tcp:send(Socket, "quit \n"),
+		  gen_tcp:close(Socket);
+	        _ ->
+		  receive_loop(Socket)
+	     end;
+	 {error, closed} ->
+	    ok
+    end.
+    
+    
 stop() ->
     io:format("Pop3 server stop! \n "),
     gen_server:cast(?MODULE, stop).
@@ -51,7 +68,7 @@ init([]) ->
               spawn(?MODULE, accept, [ListenSocket]),
 	      {ok, #state{ listener = ListenSocket}};
          {error, Reason} ->
-	     Reason
+	     {stop, Reason}
     end.
 
 handle_call(_Request, _From, State) ->
