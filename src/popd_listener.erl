@@ -39,9 +39,10 @@ accept(Socket) ->
 receive_loop(Socket) ->
     case gen_tcp:recv(Socket, 0) of
 	 {ok, Data} ->
-	    case Data of
-		<<"q\r\n">> ->
-	          gen_tcp:send(Socket, "quit \n"),
+	    ReParseData = string:to_lower(utils:trim(Data)),
+	    case ReParseData of
+		"quit" ->
+	          gen_tcp:send(Socket, "Server connection refused \r\n"),
 		  gen_tcp:close(Socket);
 	        _ ->
 		  receive_loop(Socket)
@@ -60,9 +61,9 @@ stop() ->
 %
 init([]) ->
     Port = 110,
-    Opts = [binary, {reuseaddr, true},
-            {keepalive, false}, {backlog, 30}, {active, false}],
-    
+    Opts = [list, {reuseaddr, true}, 
+            {keepalive, false}, {ip,{0,0,0,0}}, {active, false}],
+
     case gen_tcp:listen(Port, Opts) of
 	 {ok, ListenSocket} ->
               spawn(?MODULE, accept, [ListenSocket]),
