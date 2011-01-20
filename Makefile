@@ -20,5 +20,5 @@ clean:
 
 run:
 	$(ERL) -pa `pwd`/ebin \
-	-boot start_sasl \
+	-boot start_sasl \/home/shk/pmail/include/pop.hrl
 	-sname $(NODE_NAME)

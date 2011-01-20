@@ -15,7 +15,7 @@
 	 terminate/2, code_change/3]).
 
 -export([accept/1]).
--export([receive_loop/2]).
+-export([receive_loop/3]).
 
 -include_lib("../include/pop.hrl").
 
@@ -27,39 +27,88 @@ start_link()  ->
 accept(Socket) ->
     case gen_tcp:accept(Socket) of
 	{ok, Sock} ->
-	     spawn(?MODULE, receive_loop, [Sock, []]),
+	     spawn(?MODULE, receive_loop, [Sock, [], []]),
              gen_tcp:send(Sock, "+OK POP3 server ready \r\n"),
   	     accept(Socket);
 	{error, Reason} ->
 	    Reason
     end.
 
-receive_loop(Socket, UserName) ->
+receive_loop(Socket, UserName, Password) ->
     case gen_tcp:recv(Socket, 0) of
 	 {ok, Data} ->
 	    
-	   ReParseData = string:to_lower(utils:trim(Data)),
+	  ReParseData = string:to_lower(utils:trim(Data)),
 
-	  case pop_messages:is_message_user(ReParseData) of
-	        { _ , Name } ->
-		   receive_loop(Socket,Name);
+	  %% User login command
+	  case pop_messages:is_message_user(ReParseData) of 
+	       { _ , Name } ->
+		   if
+		       (length(Name) == 1) ->
+			   gen_tcp:send(Socket, pop_messages:ok_message() ++ "\r\n"),
+			   receive_loop(Socket, Name, []);
+		       true ->
+			   receive_loop(Socket, [], [])
+		   end;  
 		error ->
+		   error  
+	   end,
+
+	   %% password getting
+	   case pop_messages:is_message_pass(ReParseData) of
+	       { _ , Pass } ->
+		  if
+		      (length(Pass) == 1) ->
+			  receive_loop(Socket, UserName, Pass);
+		      true ->
+			  receive_loop(Socket, [], [])
+	          end;
+	       error ->
 		   error
 	   end,
 
+	   %% LIST command
+	   case pop_messages:is_message_list(ReParseData) of
+	       { _ , _ } ->
+            	   receive_loop(Socket, UserName, Password);
+	       {_} ->
+	   	   receive_loop(Socket, UserName, Password);
+	       error ->
+	   	   error
+	   end,
+
+	   %% RETR command
+	   case pop_messages:is_message_retr(ReParseData) of
+	       { _ , _ } ->
+            	   receive_loop(Socket, UserName, Password);
+	       error ->
+	   	   error
+	   end,
+
+	   %% DELE command
+	   case pop_messages:is_message_dele(ReParseData) of
+	       { _ , _ } ->
+            	   receive_loop(Socket, UserName, Password);
+	       error ->
+	   	   error
+	   end,
+
+	   %% Other command without atguments
 	   case ReParseData of
 	       "quit" ->
 		   gen_tcp:send(Socket, pop_messages:ok_message() ++ " POP3 server signing off\r\n"),
 		   gen_tcp:close(Socket);
 	       "noop" ->
         	   gen_tcp:send(Socket, pop_messages:ok_message() ++ "\r\n"),
-		   receive_loop(Socket, []);
+		   receive_loop(Socket, [], []);
 	       "stat" ->
 		   gen_tcp:send(Socket, UserName ++ "\r\n"),
-		   receive_loop(Socket, []);
+		   receive_loop(Socket, UserName, Password);
+	       "rset" ->
+		   receive_loop(Socket, UserName, Password);
 	       _ ->
 		   gen_tcp:send(Socket, pop_messages:err_message()),
-		   receive_loop(Socket, [])	
+		   receive_loop(Socket, [], [])	
 	    end;
 	{error, closed} ->
 	   ok

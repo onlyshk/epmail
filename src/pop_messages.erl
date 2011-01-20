@@ -9,8 +9,12 @@
 -module(pop_messages).
 
 -export([err_message/0, ok_message/0]).
+
 -export([is_message_user/1]).
 -export([is_message_pass/1]).
+-export([is_message_list/1]).
+-export([is_message_retr/1]).
+-export([is_message_dele/1]).
 
 err_message() ->
     ["-ERR\r\n"].
@@ -20,23 +24,34 @@ ok_message() ->
 
 is_message_user([]) ->
     error;
-is_message_user(UserName) ->
+is_message_user(UserName) when is_list(UserName) ->
    [H | T] = string:tokens(UserName, " "),
+ 
    case [H | T] of
       ["user", _] ->
-	  {H, T};
+	   {H, T};
        
+      
       [_, _] ->
 	  error;
-       
+      
       [_] ->
 	   error;
+ 
+      "user" ->
+	   error;
+       
       [] ->
+	   error;
+       
+       _ ->
 	   error
    end.
 
-is_message_pass(UserName) when is_list(UserName) ->
-   [H | T] = string:tokens(UserName, " "),
+is_message_pass([]) ->
+    error;
+is_message_pass(Password) when is_list(Password) ->
+   [H | T] = string:tokens(Password, " "),
    case [H | T] of
       ["pass", _] ->
 	  {H, T};
@@ -44,9 +59,83 @@ is_message_pass(UserName) when is_list(UserName) ->
       [_, _] ->
 	  error;
        
-      [[], []] ->
+      [_] ->
+          error;
+
+      "pass" ->
 	   error;
 
-      [H] ->
+      [] ->
+	   error;
+       
+      _ ->
+	   error
+   end.
+
+is_message_list([]) ->
+    error;
+is_message_list(Message)  ->
+   [H | T] = string:tokens(Message, " "),
+   case [H | T] of
+      ["list", _] ->
+	  {H, T};
+       
+      ["list"] ->
+	   {H};
+       
+      [_, _] ->
+	  error;
+      
+      [_] ->
+          error;
+       
+      [] ->
+	   error;
+      _ ->
+	   error
+   end.
+
+is_message_retr([]) ->
+    error;
+is_message_retr(Message)  ->
+   [H | T] = string:tokens(Message, " "),
+   case [H | T] of
+      ["retr", _] ->
+	  {H, T};
+       
+      [_, _] ->
+	  error;
+      
+      [_] ->
+          error;
+       
+      [] ->
+	   error;
+      _ ->
+	   error
+	      
+   end.
+
+is_message_dele([]) ->
+    error;
+is_message_dele(Message) ->
+   [H | T] = string:tokens(Message, " "),
+   case [H | T] of
+      ["dele", _] ->
+	  {H, T};
+       
+      [_, _] ->
+	  error;
+       
+      [_] ->
+	   error;
+       
+      "dele" ->
+	   error;
+       
+      [] ->
+	   error;
+       
+       _ ->
 	   error
    end.
