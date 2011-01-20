@@ -15,12 +15,9 @@
 	 terminate/2, code_change/3]).
 
 -export([accept/1]).
--export([receive_loop/1]).
+-export([receive_loop/2]).
 
--record(state, {
-	        % listen socket
-                listener 
-               }).
+-include_lib("../include/pop.hrl").
 
 -define(SERVER, ?MODULE).
 
@@ -30,26 +27,43 @@ start_link()  ->
 accept(Socket) ->
     case gen_tcp:accept(Socket) of
 	{ok, Sock} ->
-	     spawn(?MODULE, receive_loop, [Sock]),
-	     accept(Socket);
+	     spawn(?MODULE, receive_loop, [Sock, []]),
+             gen_tcp:send(Sock, "+OK POP3 server ready \r\n"),
+  	     accept(Socket);
 	{error, Reason} ->
 	    Reason
     end.
 
-receive_loop(Socket) ->
+receive_loop(Socket, UserName) ->
     case gen_tcp:recv(Socket, 0) of
 	 {ok, Data} ->
-	    ReParseData = string:to_lower(utils:trim(Data)),
-	    case ReParseData of
-		"quit" ->
-	          gen_tcp:send(Socket, "Server connection refused \r\n"),
-		  gen_tcp:close(Socket);
-	        _ ->
-		  receive_loop(Socket)
-	     end;
-	 {error, closed} ->
-	    ok
-    end.
+	    
+	   ReParseData = string:to_lower(utils:trim(Data)),
+
+	  case pop_messages:is_message_user(ReParseData) of
+	        { _ , Name } ->
+		   receive_loop(Socket,Name);
+		error ->
+		   error
+	   end,
+
+	   case ReParseData of
+	       "quit" ->
+		   gen_tcp:send(Socket, pop_messages:ok_message() ++ " POP3 server signing off\r\n"),
+		   gen_tcp:close(Socket);
+	       "noop" ->
+        	   gen_tcp:send(Socket, pop_messages:ok_message() ++ "\r\n"),
+		   receive_loop(Socket, []);
+	       "stat" ->
+		   gen_tcp:send(Socket, UserName ++ "\r\n"),
+		   receive_loop(Socket, []);
+	       _ ->
+		   gen_tcp:send(Socket, pop_messages:err_message()),
+		   receive_loop(Socket, [])	
+	    end;
+	{error, closed} ->
+	   ok
+   end.
     
     
 stop() ->

@@ -1,6 +1,6 @@
 ERL=erl
-APP_NAME=pmail
-NODE_NAME=pmail
+APP_NAME=epmail
+NODE_NAME=epmail
 VSN=0.1
 
 all: $(wildcard src/*.erl)
