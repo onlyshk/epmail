@@ -39,80 +39,100 @@ receive_loop(Socket, UserName, Password) ->
 	 {ok, Data} ->
 	    
 	  ReParseData = string:to_lower(utils:trim(Data)),
+	  
+	     %% User login command
+          try
+	      case pop_messages:is_message_user(ReParseData) of 
+		  { _ , Name } ->
+		      if
+			  (length(Name) == 1) ->
+			      gen_tcp:send(Socket, pop_messages:ok_message() ++ "\r\n"),
+			      receive_loop(Socket, Name, []);
+			  true ->
+			      receive_loop(Socket, [], [])
+		      end;  
+		  error ->
+		      error  
+	      end
+	  catch _:_ -> gen_tcp:close(Socket)
+          end,
+ 
+	      %% password getting
+	  try
+	      case pop_messages:is_message_pass(ReParseData) of
+		  { _ , Pass } ->
+		      if
+			  (length(Pass) == 1) ->
+			      gen_tcp:send(Socket, pop_messages:ok_message() ++ "\r\n"),
+			      receive_loop(Socket, UserName, Pass);
+			  true ->
+			      receive_loop(Socket, [], [])
+		      end;
+		  error ->
+		      error
+	      end
+	  catch _:_ -> gen_tcp:close(Socket)
+	  end,
+	    
+	        %% LIST command
+	  try
+	      case pop_messages:is_message_list(ReParseData) of
+		  { _ , _ } ->
+		      receive_loop(Socket, UserName, Password);
+		  {_} ->
+		      receive_loop(Socket, UserName, Password);
+		  error ->
+		      error
+	      end
+	  catch _:_ -> gen_tcp:close(Socket)
+	  end,
 
-	  %% User login command
-	  case pop_messages:is_message_user(ReParseData) of 
-	       { _ , Name } ->
-		   if
-		       (length(Name) == 1) ->
-			   gen_tcp:send(Socket, pop_messages:ok_message() ++ "\r\n"),
-			   receive_loop(Socket, Name, []);
-		       true ->
-			   receive_loop(Socket, [], [])
-		   end;  
-		error ->
-		   error  
-	   end,
+	         %% RETR command
+	 try
+	     case pop_messages:is_message_retr(ReParseData) of
+		 { _ , _ } ->
+		     receive_loop(Socket, UserName, Password);
+		 error ->
+		     error
+	     end
+	 catch _:_ -> gen_tcp:close(Socket)
+	 end,
 
-	   %% password getting
-	   case pop_messages:is_message_pass(ReParseData) of
-	       { _ , Pass } ->
-		  if
-		      (length(Pass) == 1) ->
-			  receive_loop(Socket, UserName, Pass);
-		      true ->
-			  receive_loop(Socket, [], [])
-	          end;
-	       error ->
-		   error
-	   end,
+	          %% DELE command
+	  try
+	      case pop_messages:is_message_dele(ReParseData) of
+		  { _ , _ } ->
+		      receive_loop(Socket, UserName, Password);
+		  error ->
+		      error
+	      end
+	  catch _:_ -> gen_tcp:close(Socket)
+	  end,
 
-	   %% LIST command
-	   case pop_messages:is_message_list(ReParseData) of
-	       { _ , _ } ->
-            	   receive_loop(Socket, UserName, Password);
-	       {_} ->
-	   	   receive_loop(Socket, UserName, Password);
-	       error ->
-	   	   error
-	   end,
+	  	   %% Other command without atguments
+	  try
+	      case ReParseData of
+		  "quit" ->
+		      gen_tcp:send(Socket, pop_messages:ok_message() ++ " POP3 server signing off\r\n"),
+		      gen_tcp:close(Socket);
+		  "noop" ->
+		      gen_tcp:send(Socket, pop_messages:ok_message() ++ "\r\n"),
+		      receive_loop(Socket, [], []);
+		  "stat" ->
+		      gen_tcp:send(Socket, UserName ++ "\r\n"),
+		      receive_loop(Socket, UserName, Password);
+		  "rset" ->
+		      receive_loop(Socket, UserName, Password);
+		  _ ->
+		      gen_tcp:send(Socket, pop_messages:err_message()),
+		      receive_loop(Socket, [], [])	
+	      end
+	  catch _:_ -> gen_tcp:close(Socket)
+	  end;
 
-	   %% RETR command
-	   case pop_messages:is_message_retr(ReParseData) of
-	       { _ , _ } ->
-            	   receive_loop(Socket, UserName, Password);
-	       error ->
-	   	   error
-	   end,
-
-	   %% DELE command
-	   case pop_messages:is_message_dele(ReParseData) of
-	       { _ , _ } ->
-            	   receive_loop(Socket, UserName, Password);
-	       error ->
-	   	   error
-	   end,
-
-	   %% Other command without atguments
-	   case ReParseData of
-	       "quit" ->
-		   gen_tcp:send(Socket, pop_messages:ok_message() ++ " POP3 server signing off\r\n"),
-		   gen_tcp:close(Socket);
-	       "noop" ->
-        	   gen_tcp:send(Socket, pop_messages:ok_message() ++ "\r\n"),
-		   receive_loop(Socket, [], []);
-	       "stat" ->
-		   gen_tcp:send(Socket, UserName ++ "\r\n"),
-		   receive_loop(Socket, UserName, Password);
-	       "rset" ->
-		   receive_loop(Socket, UserName, Password);
-	       _ ->
-		   gen_tcp:send(Socket, pop_messages:err_message()),
-		   receive_loop(Socket, [], [])	
-	    end;
 	{error, closed} ->
-	   ok
-   end.
+	    ok
+    end.
     
     
 stop() ->
