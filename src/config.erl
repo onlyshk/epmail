@@ -13,6 +13,7 @@
 -export([get_smtp_port/1, get_pop3_port/1]).
 -export([get_starting_smtp/1, get_starting_pop3/1]).
 -export([get_log_path/1]).
+-export([get_domain_dir_path/1]).
 
 -author('kuleshovmail@gmail.com').
 -vsn('0.1').
@@ -47,8 +48,8 @@ get_smtp_server_name( [] ) ->
     [];
 get_smtp_server_name(ConfigPath) ->
     ConfigText = read_config(ConfigPath),
-    ServerName = string:tokens(lists:nth(1,ConfigText), " : "),
-    [_ | T ] = ServerName,
+    Token = string:tokens(lists:nth(1,ConfigText), " : "),
+    [_ | T ] = Token,
     list_to_atom(lists:nth(1,T)).
 
 %
@@ -58,8 +59,8 @@ get_pop3_server_name([]) ->
     [];
 get_pop3_server_name(ConfigPath) ->
     ConfigText = read_config(ConfigPath),
-    ServerName = string:tokens(lists:nth(2,ConfigText), " : "),
-    [_ | T ] = ServerName,
+    Token = string:tokens(lists:nth(2,ConfigText), " : "),
+    [_ | T ] = Token,
     list_to_atom(lists:nth(1,T)).
 
 %
@@ -69,8 +70,8 @@ get_smtp_port([]) ->
     [];
 get_smtp_port(ConfigPath) ->
     ConfigText = read_config(ConfigPath),
-    ServerName = string:tokens(lists:nth(3,ConfigText), " : "),
-    [_ | T ] = ServerName,
+    Token = string:tokens(lists:nth(3,ConfigText), " : "),
+    [_ | T ] = Token,
     try
 	list_to_integer(lists:nth(1,T))
 	    catch
@@ -84,8 +85,8 @@ get_pop3_port([]) ->
     [];
 get_pop3_port(ConfigPath) ->
     ConfigText = read_config(ConfigPath),
-    ServerName = string:tokens(lists:nth(4,ConfigText), " : "),
-    [_ | T ] = ServerName,
+    Token = string:tokens(lists:nth(4,ConfigText), " : "),
+    [_ | T ] = Token,
     try
 	list_to_integer(lists:nth(1,T))
 	    catch
@@ -100,8 +101,8 @@ get_starting_smtp([]) ->
     [];
 get_starting_smtp(ConfigPath) ->
     ConfigText = read_config(ConfigPath),
-    ServerName = string:tokens(lists:nth(5,ConfigText), " : "),
-    [_ | T ] = ServerName,
+    Token = string:tokens(lists:nth(5,ConfigText), " : "),
+    [_ | T ] = Token,
     list_to_atom(lists:nth(1,T)).
 
 %
@@ -112,8 +113,8 @@ get_starting_pop3([]) ->
     [];
 get_starting_pop3(ConfigPath) ->
     ConfigText = read_config(ConfigPath),
-    ServerName = string:tokens(lists:nth(6,ConfigText), " : "),
-    [_ | T ] = ServerName,
+    Token = string:tokens(lists:nth(6,ConfigText), " : "),
+    [_ | T ] = Token,
     list_to_atom(lists:nth(1,T)).
 
 %
@@ -123,6 +124,15 @@ get_log_path([]) ->
     [];
 get_log_path(ConfigPath) ->
     ConfigText = read_config(ConfigPath),
-    ServerName = string:tokens(lists:nth(7,ConfigText), " : "),
-    [_ | T ] = ServerName,
+    Token =  string:tokens(lists:nth(7,ConfigText), " : "),
+    [_ | T ] = Token,
     list_to_atom(lists:nth(1,T)).
+
+get_domain_dir_path([]) ->
+    [];
+get_domain_dir_path(ConfigPath) ->
+    ConfigText = read_config(ConfigPath),
+    Token = string:tokens(lists:nth(8, ConfigText), " : "),
+    [_ | T] = Token,
+    (lists:nth(1,T)).
+

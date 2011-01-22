@@ -22,6 +22,7 @@
 -define(SERVER, ?MODULE).
 
 start_link()  ->
+    maildir:create_key_value_user_pass_db("Users"),
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 accept(Socket) ->
@@ -35,6 +36,7 @@ accept(Socket) ->
     end.
 
 receive_loop(Socket, UserName, Password) ->
+    io:format("HELLLO \n"),
     case gen_tcp:recv(Socket, 0) of
 	 {ok, Data} ->
 	    
@@ -119,7 +121,7 @@ receive_loop(Socket, UserName, Password) ->
 		      gen_tcp:send(Socket, pop_messages:ok_message() ++ "\r\n"),
 		      receive_loop(Socket, [], []);
 		  "stat" ->
-		      gen_tcp:send(Socket, UserName ++ "\r\n"),
+		      gen_tcp:send(Socket, 1),
 		      receive_loop(Socket, UserName, Password);
 		  "rset" ->
 		      receive_loop(Socket, UserName, Password);
@@ -170,6 +172,7 @@ handle_info(_Info, State) ->
 % terminate server
 %
 terminate(_Reason, State) ->
+    %maildir:destroy(),
     gen_tcp:close(State#state.listener),
     ok.
 
