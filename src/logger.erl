@@ -75,6 +75,7 @@ add_log(Text) ->
 %
 init(LoggerPath) ->
     io:format("Logger server start ~n "),
+    process_flag(trap_exit, true),
     create_log(LoggerPath),
 
     {ok, F} = file:open("log.txt", [append]),

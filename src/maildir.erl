@@ -13,6 +13,9 @@
 -export([add_user/3]).
 -export([delete_user/2]).
 -export([create_key_value_user_pass_db/1]).
+-export([check_pass/2]).
+
+-export([get_message/2]).
 
 add_user([], _, _) ->
     error;
@@ -30,7 +33,7 @@ add_user(Domain, UserName, Password) ->
     filelib:ensure_dir(Domain ++ UserName ++ "MailDir/" ++ "new/"),
     filelib:ensure_dir(Domain ++ UserName ++ "MailDir/" ++ "cur/"),
 
-    dets:insert(upDisk, {Domain, UserName, Password}).
+    dets:insert(upDisk, {UserName, Domain , Password}).
 
 delete_user(Domain, UserName) ->
     dets:delete(upDisk, {Domain, {UserName, '_'}}).
@@ -45,6 +48,22 @@ create_key_value_user_pass_db(UsersPath) ->
 
 destroy() ->
     dets:close(upDisk).
-    
 
+get_message(Domain, UserName) ->
+    file:read_file(Domain ++ UserName ++ "MailDir/" ++ "new/").
+
+check_pass(UserName, Password) ->
+    case dets:lookup(upDisk, UserName) of
+	[{_,_,P}]->
+	     if
+		 (Password =:= P) ->
+		     ok;
+		 true ->
+		     error
+	     end;
+	[] ->
+	    error
+    end.
+	    
+	    
     

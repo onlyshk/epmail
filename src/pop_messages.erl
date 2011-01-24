@@ -81,12 +81,15 @@ is_message_list(Message)  ->
 	  {H, T};
        
       ["list"] ->
-	   {H};
+      	   {H};
        
       [_, _] ->
 	  error;
       
       [_] ->
+          error;
+
+      list ->
           error;
        
       [] ->
@@ -105,9 +108,15 @@ is_message_retr(Message)  ->
        
       [_, _] ->
 	  error;
+       
+      ["retr"] ->
+	   error;
       
       [_] ->
           error;
+
+      "retr" ->
+	  error;
        
       [] ->
 	   error;

@@ -36,7 +36,6 @@ accept(Socket) ->
     end.
 
 receive_loop(Socket, UserName, Password) ->
-    io:format("HELLLO \n"),
     case gen_tcp:recv(Socket, 0) of
 	 {ok, Data} ->
 	    
@@ -58,59 +57,41 @@ receive_loop(Socket, UserName, Password) ->
 	      end
 	  catch _:_ -> gen_tcp:close(Socket)
           end,
- 
-	      %% password getting
+	   
+	  %% password getting
+	  %% At first here we check that password must be input only
+	  %% after user name. Then we check that passs command has 1 parameter.
+	  %% and at last we check that user pass == user pass in dets db
 	  try
 	      case pop_messages:is_message_pass(ReParseData) of
 		  { _ , Pass } ->
 		      if
-			  (length(Pass) == 1) ->
-			      gen_tcp:send(Socket, pop_messages:ok_message() ++ "\r\n"),
-			      receive_loop(Socket, UserName, Pass);
-			  true ->
-			      receive_loop(Socket, [], [])
+			  (UserName == []) ->
+			      gen_tcp:send(Socket, pop_messages:err_message()),
+			      receive_loop(Socket, [], []);
+		          true ->
+			      
+			      if
+				  (length(Pass) == 1) ->
+				      case maildir:check_pass(lists:concat(UserName), lists:concat(Pass)) of
+					  ok ->
+					      gen_tcp:send(Socket, pop_messages:ok_message() ++ "\r\n"),
+					      receive_loop(Socket, UserName, Pass);
+					  error ->
+					      gen_tcp:send(Socket, pop_messages:err_message() ++ 
+                                                                   "Your password wrong, pleasy try user/pass again" ++ "\r\n"),
+					      receive_loop(Socket, [], [])
+				      end;
+				  true ->
+				      receive_loop(Socket, [], [])
+			      end
 		      end;
 		  error ->
 		      error
 	      end
 	  catch _:_ -> gen_tcp:close(Socket)
 	  end,
-	    
-	        %% LIST command
-	  try
-	      case pop_messages:is_message_list(ReParseData) of
-		  { _ , _ } ->
-		      receive_loop(Socket, UserName, Password);
-		  {_} ->
-		      receive_loop(Socket, UserName, Password);
-		  error ->
-		      error
-	      end
-	  catch _:_ -> gen_tcp:close(Socket)
-	  end,
-
-	         %% RETR command
-	 try
-	     case pop_messages:is_message_retr(ReParseData) of
-		 { _ , _ } ->
-		     receive_loop(Socket, UserName, Password);
-		 error ->
-		     error
-	     end
-	 catch _:_ -> gen_tcp:close(Socket)
-	 end,
-
-	          %% DELE command
-	  try
-	      case pop_messages:is_message_dele(ReParseData) of
-		  { _ , _ } ->
-		      receive_loop(Socket, UserName, Password);
-		  error ->
-		      error
-	      end
-	  catch _:_ -> gen_tcp:close(Socket)
-	  end,
-
+     
 	  	   %% Other command without atguments
 	  try
 	      case ReParseData of
@@ -121,7 +102,9 @@ receive_loop(Socket, UserName, Password) ->
 		      gen_tcp:send(Socket, pop_messages:ok_message() ++ "\r\n"),
 		      receive_loop(Socket, [], []);
 		  "stat" ->
-		      gen_tcp:send(Socket, 1),
+		      gen_tcp:send(Socket, "+OK "),
+		      gen_tcp:send(Socket, integer_to_list(1) ++ " "),
+		      gen_tcp:send(Socket, integer_to_list(21755) ++ "\r\n"),
 		      receive_loop(Socket, UserName, Password);
 		  "rset" ->
 		      receive_loop(Socket, UserName, Password);
@@ -151,6 +134,7 @@ init([]) ->
 
     case gen_tcp:listen(Port, Opts) of
 	 {ok, ListenSocket} ->
+	      process_flag(trap_exit, true),
               spawn(?MODULE, accept, [ListenSocket]),
 	      {ok, #state{ listener = ListenSocket}};
          {error, Reason} ->
