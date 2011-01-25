@@ -15,6 +15,7 @@
 	 terminate/2, code_change/3]).
 
 -export([accept/1]).
+-export([loop_for_list/2]).
 -export([receive_loop/3]).
 
 -include_lib("../include/pop.hrl").
@@ -34,6 +35,11 @@ accept(Socket) ->
 	{error, Reason} ->
 	    Reason
     end.
+
+loop_for_list(Socket, FileCount)  ->
+    OctetList = utils:get_list_octets("/home/shk/localhost/user1/MailDir/new"),
+    lists:zipwith(fun (X1, X2) -> gen_tcp:send(Socket, [integer_to_list(X1), " " ++ integer_to_list(X2)]
+					       ++ "\r\n") end, lists:seq(1, FileCount), OctetList).
 
 receive_loop(Socket, UserName, Password) ->
     case gen_tcp:recv(Socket, 0) of
@@ -85,6 +91,43 @@ receive_loop(Socket, UserName, Password) ->
 				  true ->
 				      receive_loop(Socket, [], [])
 			      end
+		      end;
+		  error ->
+		      error
+	      end
+	  catch _:_ -> gen_tcp:close(Socket)
+	  end,
+
+	  try
+	      case pop_messages:is_message_list(ReParseData) of
+		  { _ , [H | _] } ->
+		      if
+			  ((UserName == []) or (Password == [])) ->
+			      gen_tcp:send(Socket, pop_messages:err_message()),
+			      receive_loop(Socket, [], []);
+		          true ->
+			      Octets = utils:get_octet_from_file("/home/shk/localhost/user1/MailDir/new", list_to_integer(H)),
+			      gen_tcp:send(Socket, "+OK " ++ H ++ " " ++ integer_to_list(Octets) ++ "\r\n"),
+			      gen_tcp:send(Socket, ".\r\n"),
+			      receive_loop(Socket, UserName, Password) 
+		      end;
+		  {_} ->
+		      if
+			  ((UserName == []) or (Password == [])) ->
+			      gen_tcp:send(Socket, pop_messages:err_message()),
+			      receive_loop(Socket, [], []);
+			  true ->
+			      %% +OK 2 messages (320 octets)
+			      %% 1 120
+			      %% 2 200
+			      %% .
+			      OctetSumm = utils:octets_summ("/home/shk/localhost/user1/MailDir/new"),
+			      FileCount = utils:files_count("/home/shk/localhost/user1/MailDir/new"),
+			      gen_tcp:send(Socket, "+OK " ++ integer_to_list(FileCount) ++ " message (" ++ integer_to_list(OctetSumm)
+					   ++ " octets)\r\n"), 
+			      loop_for_list(Socket, FileCount),
+			      gen_tcp:send(Socket, ".\r\n"),
+			      receive_loop(Socket,UserName, Password)
 		      end;
 		  error ->
 		      error

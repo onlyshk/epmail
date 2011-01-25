@@ -9,18 +9,18 @@
 
 -module(utils).
 
--export([do_receive/2]).
--export([trim_whitespace/1]).
 -export([trim/1]).
+-export([files_count/1]).
+-export([octets_summ/1]).
+-export([octets_count/1]).
+-export([get_octet_from_file/2]).
+-export([get_list_octets/1]).
+-export([trim_whitespace/1]).
 
-do_receive(Sock, Bs) ->
-    case gen_tcp:recv(Sock, 0) of
-        {ok, B} ->
-            do_receive(Sock, [Bs, B]);
-        {error, closed} ->
-            {ok, list_to_binary(Bs)}
-    end.
 
+%
+% Trim string
+%
 trim_whitespace(Input) ->
        re:replace(Input, "\\s+", "", [global]).
 
@@ -33,3 +33,47 @@ is_whitespace($\t) -> true;
 is_whitespace($\n) -> true;
 is_whitespace($\r) -> true;
 is_whitespace(_Else) -> false.
+
+%
+% Get files count in directory
+%
+files_count(Dir) ->
+    case file:list_dir(Dir) of  
+         {ok, FileNames} ->
+            length(FileNames);
+        {error, Reason} ->
+            Reason
+    end.
+
+%
+% Count of chars in file
+%
+octets_count(Mail) ->
+    case file:read_file(Mail) of
+	{ok, File} ->
+	    CharCount = lists:flatten(string:tokens(binary_to_list(File), "\n")),
+	    length(CharCount);
+	{error, Reason} ->
+	    Reason
+    end.
+
+%
+% Get sum of files size in direcotory
+%
+octets_summ(Dir) ->
+    {ok, List} = file:list_dir(Dir),
+    lists:sum([filelib:file_size(Dir ++ "/" ++ X) || X <- List]).
+
+%
+% Get list of files size in directory
+%
+get_list_octets(Dir) ->
+    {ok, List} = file:list_dir(Dir),
+    [filelib:file_size(Dir ++ "/" ++ X) || X <- List].
+
+%
+% Get file size from file
+%
+get_octet_from_file(Dir, Mail) ->
+    MessageList = get_list_octets(Dir),
+    lists:nth(Mail, MessageList).

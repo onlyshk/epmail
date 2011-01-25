@@ -77,7 +77,7 @@ is_message_list([]) ->
 is_message_list(Message)  ->
    [H | T] = string:tokens(Message, " "),
    case [H | T] of
-      ["list", _] ->
+      ["list", _]  ->
 	  {H, T};
        
       ["list"] ->
