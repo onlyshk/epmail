@@ -47,7 +47,7 @@ receive_loop(Socket, UserName, Password) ->
 	    
 	  ReParseData = string:to_lower(utils:trim(Data)),
 	  
-	     %% User login command
+	  %% User login command
           try
 	      case pop_messages:is_message_user(ReParseData) of 
 		  { _ , Name } ->
@@ -134,8 +134,44 @@ receive_loop(Socket, UserName, Password) ->
 	      end
 	  catch _:_ -> gen_tcp:close(Socket)
 	  end,
-     
-	  	   %% Other command without atguments
+
+	  %% RETR command
+	  %% +OK || -ERR n message (m octets)
+	  %% < body message>
+	  %% .
+	  try
+	      case pop_messages:is_message_retr(ReParseData) of
+		  {_, [Retr | _ ]} ->			      
+		      Message = utils:get_file_path_by_num("/home/shk/localhost/user1/MailDir/new",
+			      							     list_to_integer(Retr)),
+		      {ok, Text} = file:read_file(Message),
+		      FileSize = filelib:file_size(Message),
+
+		      gen_tcp:send(Socket, "+OK" ++ " "),
+		      gen_tcp:send(Socket, integer_to_list(FileSize) ++ "octets\r\n"),
+		      gen_tcp:send(Socket, binary_to_list(Text) ++ "\r\n"),
+		      gen_tcp:send(Socket, "." ++ "\r\n"),
+		      receive_loop(Socket, UserName, Password); 
+		  error ->
+		      error
+	       end
+	  catch _:_ -> gen_tcp:close(Socket)
+	  end,
+
+	  try
+	      case pop_messages:is_message_dele(ReParseData) of
+		  {_, [Dele| _]} ->
+		      gen_tcp:send(Socket, "+OK message" ++ " "),
+		      gen_tcp:send(Socket, Dele ++ " "),
+		      gen_tcp:send(Socket, "deleted \r\n"),
+		      receive_loop(Socket, UserName, Password);
+		  error ->
+		      error
+	      end
+	  catch _:_ -> gen_tcp:close(Socket)
+	  end,
+
+	  %% Other command without atguments
 	  try
 	      case ReParseData of
 		  "quit" ->

@@ -108,9 +108,6 @@ is_message_retr(Message)  ->
        
       [_, _] ->
 	  error;
-       
-      ["retr"] ->
-	   error;
       
       [_] ->
           error;

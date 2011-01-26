@@ -13,9 +13,10 @@
 -export([files_count/1]).
 -export([octets_summ/1]).
 -export([octets_count/1]).
--export([get_octet_from_file/2]).
 -export([get_list_octets/1]).
 -export([trim_whitespace/1]).
+-export([get_octet_from_file/2]).
+-export([get_file_path_by_num/2]).
 
 
 %
@@ -77,3 +78,10 @@ get_list_octets(Dir) ->
 get_octet_from_file(Dir, Mail) ->
     MessageList = get_list_octets(Dir),
     lists:nth(Mail, MessageList).
+
+%
+% Get file path by num from directory
+%
+get_file_path_by_num(Dir, Num) ->
+    {ok, List} = file:list_dir(Dir),
+    Dir ++ "/" ++ lists:nth(Num, List).
