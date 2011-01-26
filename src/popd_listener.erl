@@ -144,10 +144,15 @@ receive_loop(Socket, UserName, Password) ->
 		  "noop" ->
 		      gen_tcp:send(Socket, pop_messages:ok_message() ++ "\r\n"),
 		      receive_loop(Socket, [], []);
+
+		  % TODO:
+		  % Change file path for config
 		  "stat" ->
+		      MessageCount = utils:files_count("/home/shk/localhost/user1/MailDir/new"),
+		      Octet = utils:octets_summ("/home/shk/localhost/user1/MailDir/new"),
 		      gen_tcp:send(Socket, "+OK "),
-		      gen_tcp:send(Socket, integer_to_list(1) ++ " "),
-		      gen_tcp:send(Socket, integer_to_list(21755) ++ "\r\n"),
+		      gen_tcp:send(Socket, integer_to_list(MessageCount) ++ " "),
+		      gen_tcp:send(Socket, integer_to_list(Octet) ++ "\r\n"),
 		      receive_loop(Socket, UserName, Password);
 		  "rset" ->
 		      receive_loop(Socket, UserName, Password);
