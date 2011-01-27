@@ -28,9 +28,9 @@ add_user(_, _, []) ->
 
 add_user(Domain, UserName, Password) ->
     filelib:ensure_dir(Domain ++ UserName),
-    filelib:ensure_dir(Domain ++ UserName ++ "MailDir/"),
-    filelib:ensure_dir(Domain ++ UserName ++ "MailDir/" ++ "tmp/"),
-    filelib:ensure_dir(Domain ++ UserName ++ "MailDir/" ++ "new/"),
+    filelib:ensure_dir(Domain ++ UserName),
+    filelib:ensure_dir(Domain ++ UserName ++ "tmp/"),
+    filelib:ensure_dir(Domain ++ UserName ++ "new/"),
 
     dets:insert(upDisk, {UserName, Domain , Password}).
 
@@ -49,7 +49,7 @@ destroy() ->
     dets:close(upDisk).
 
 get_message(Domain, UserName) ->
-    file:read_file(Domain ++ UserName ++ "MailDir/" ++ "new/").
+    file:read_file(Domain ++ UserName ++ "new/").
 
 check_pass(UserName, Password) ->
     case dets:lookup(upDisk, UserName) of

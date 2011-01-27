@@ -15,7 +15,7 @@
 	 terminate/2, code_change/3]).
 
 -export([accept/1]).
--export([loop_for_list/2]).
+-export([loop_for_list/3]).
 -export([receive_loop/3]).
 
 -include_lib("../include/pop.hrl").
@@ -36,8 +36,8 @@ accept(Socket) ->
 	    Reason
     end.
 
-loop_for_list(Socket, FileCount)  ->
-    OctetList = utils:get_list_octets("/home/shk/localhost/user1/MailDir/new"),
+loop_for_list(Socket, FileCount, UserName)  ->
+    OctetList = utils:get_list_octets(config:get_domain_dir_path(config) ++ UserName ++ "/new"),  %/home/shk/localhost/user1/MailDir/new"),
     lists:zipwith(fun (X1, X2) -> gen_tcp:send(Socket, [integer_to_list(X1), " " ++ integer_to_list(X2)]
 					       ++ "\r\n") end, lists:seq(1, FileCount), OctetList).
 
@@ -106,7 +106,7 @@ receive_loop(Socket, UserName, Password) ->
 			      gen_tcp:send(Socket, pop_messages:err_message()),
 			      receive_loop(Socket, [], []);
 		          true ->
-			      Octets = utils:get_octet_from_file("/home/shk/localhost/user1/MailDir/new", list_to_integer(H)),
+			      Octets = utils:get_octet_from_file(config:get_domain_dir_path(config) ++ UserName ++ "/new", list_to_integer(H)),
 			      gen_tcp:send(Socket, "+OK " ++ H ++ " " ++ integer_to_list(Octets) ++ "\r\n"),
 			      gen_tcp:send(Socket, ".\r\n"),
 			      receive_loop(Socket, UserName, Password) 
@@ -121,11 +121,12 @@ receive_loop(Socket, UserName, Password) ->
 			      %% 1 120
 			      %% 2 200
 			      %% .
-			      OctetSumm = utils:octets_summ("/home/shk/localhost/user1/MailDir/new"),
-			      FileCount = utils:files_count("/home/shk/localhost/user1/MailDir/new"),
+			      OctetSumm = utils:octets_summ(config:get_domain_dir_path(config) ++ UserName ++ "/new"),
+			      
+			      FileCount = utils:files_count(config:get_domain_dir_path(config) ++ UserName ++ "/new"),
 			      gen_tcp:send(Socket, "+OK " ++ integer_to_list(FileCount) ++ " message (" ++ integer_to_list(OctetSumm)
-					   ++ " octets)\r\n"), 
-			      loop_for_list(Socket, FileCount),
+			      		   ++ " octets)\r\n"), 
+			      loop_for_list(Socket, FileCount, UserName),
 			      gen_tcp:send(Socket, ".\r\n"),
 			      receive_loop(Socket,UserName, Password)
 		      end;
@@ -142,7 +143,7 @@ receive_loop(Socket, UserName, Password) ->
 	  try
 	      case pop_messages:is_message_retr(ReParseData) of
 		  {_, [Retr | _ ]} ->			      
-		      Message = utils:get_file_path_by_num("/home/shk/localhost/user1/MailDir/new",
+		      Message = utils:get_file_path_by_num(config:get_domain_dir_path(config) ++ UserName ++ "/new",
 			      							     list_to_integer(Retr)),
 		      {ok, Text} = file:read_file(Message),
 		      FileSize = filelib:file_size(Message),
@@ -164,7 +165,7 @@ receive_loop(Socket, UserName, Password) ->
 		      gen_tcp:send(Socket, "+OK message" ++ " "),
 		      gen_tcp:send(Socket, Dele ++ " "),
 		      gen_tcp:send(Socket, "deleted \r\n"),
-		      utils:delete_messages("/home/shk/localhost/user1/MailDir/new", list_to_integer(Dele)),
+		      utils:delete_messages(config:get_domain_dir_path(config) ++ UserName ++ "/new", list_to_integer(Dele)),
 		      receive_loop(Socket, UserName, Password);
 		  error ->
 		      error
@@ -185,8 +186,8 @@ receive_loop(Socket, UserName, Password) ->
 		  % TODO:
 		  % Change file path for config
 		  "stat" ->
-		      MessageCount = utils:files_count("/home/shk/localhost/user1/MailDir/new"),
-		      Octet = utils:octets_summ("/home/shk/localhost/user1/MailDir/new"),
+		      MessageCount = utils:files_count(config:get_domain_dir_path(config) ++ UserName ++ "/new"),
+		      Octet = utils:octets_summ(config:get_domain_dir_path(config) ++ UserName ++ "/new"),
 		      gen_tcp:send(Socket, "+OK "),
 		      gen_tcp:send(Socket, integer_to_list(MessageCount) ++ " "),
 		      gen_tcp:send(Socket, integer_to_list(Octet) ++ "\r\n"),

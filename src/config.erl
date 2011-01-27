@@ -14,6 +14,7 @@
 -export([get_starting_smtp/1, get_starting_pop3/1]).
 -export([get_log_path/1]).
 -export([get_domain_dir_path/1]).
+-export([get_domain_from_dir_path/1]).
 
 -author('kuleshovmail@gmail.com').
 -vsn('0.1').
@@ -134,5 +135,11 @@ get_domain_dir_path(ConfigPath) ->
     ConfigText = read_config(ConfigPath),
     Token = string:tokens(lists:nth(8, ConfigText), " : "),
     [_ | T] = Token,
-    (lists:nth(1,T)).
+    (lists:nth(1,T)) ++ "/".
 
+get_domain_from_dir_path([]) ->
+    [];
+get_domain_from_dir_path(ConfigPath) ->
+    Path = get_domain_dir_path(ConfigPath),
+    Token = string:tokens(Path, "/"),
+    lists:last(Token).
