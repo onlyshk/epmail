@@ -56,7 +56,7 @@ db_backup() ->
     file:write(F, [io_lib:format("~4..0B-~2..0B-~2..0B ~2..0B:~2..0B:~2..0B ~s~n",
     			    [YYYY,M,D, HH,MM,SS, Comment]) || {{HH,MM,SS},{YYYY,M,D},Comment} <- List ]),
     file:close(F).
-     
+    
 destroy_log() ->
     dets:close(loggerDisk).    
 %

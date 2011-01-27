@@ -23,7 +23,8 @@
 -define(SERVER, ?MODULE).
 
 start_link()  ->
-    maildir:create_key_value_user_pass_db("Users"),
+    maildir:create_key_value_user_pass_db("User"),
+    filelib:ensure_dir(config:get_domain_dir_path(config)),
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 accept(Socket) ->
@@ -214,7 +215,7 @@ stop() ->
 % Callback functions
 %
 init([]) ->
-    Port = 110,
+    Port = config:get_pop3_port(config),
     Opts = [list, {reuseaddr, true}, 
             {keepalive, false}, {ip,{0,0,0,0}}, {active, false}],
 
@@ -242,7 +243,7 @@ handle_info(_Info, State) ->
 % terminate server
 %
 terminate(_Reason, State) ->
-    %maildir:destroy(),
+    maildir:destroy(),
     gen_tcp:close(State#state.listener),
     ok.
 

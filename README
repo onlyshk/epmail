@@ -4,11 +4,13 @@ epmail - smtp/pop3 mail server written in erlang.
 ## Install/run
     make
     cd ebin
-    erl
-    popd_listener:start_link().
     
-First of all after server running create some users:
-    maildir:adduser("localhost", "admin", "qwerty").
+In erlang shell:
+
+1> popd_listener:start_link().
+
+2> maildir:adduser("admin", "123").
+    
  
 Then you can connect by telnet:
 
