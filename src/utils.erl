@@ -15,6 +15,7 @@
 -export([octets_count/1]).
 -export([get_list_octets/1]).
 -export([trim_whitespace/1]).
+-export([delete_messages/2]).
 -export([get_octet_from_file/2]).
 -export([get_file_path_by_num/2]).
 
@@ -85,3 +86,10 @@ get_octet_from_file(Dir, Mail) ->
 get_file_path_by_num(Dir, Num) ->
     {ok, List} = file:list_dir(Dir),
     Dir ++ "/" ++ lists:nth(Num, List).
+
+%
+% Move to tmp directory
+%
+delete_messages(Dir, Num) ->
+    {ok, List} = file:list_dir(Dir),
+    file:delete(Dir ++ "/" ++ lists:nth(Num, List)).

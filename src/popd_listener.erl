@@ -164,6 +164,7 @@ receive_loop(Socket, UserName, Password) ->
 		      gen_tcp:send(Socket, "+OK message" ++ " "),
 		      gen_tcp:send(Socket, Dele ++ " "),
 		      gen_tcp:send(Socket, "deleted \r\n"),
+		      utils:delete_messages("/home/shk/localhost/user1/MailDir/new", list_to_integer(Dele)),
 		      receive_loop(Socket, UserName, Password);
 		  error ->
 		      error

@@ -31,7 +31,6 @@ add_user(Domain, UserName, Password) ->
     filelib:ensure_dir(Domain ++ UserName ++ "MailDir/"),
     filelib:ensure_dir(Domain ++ UserName ++ "MailDir/" ++ "tmp/"),
     filelib:ensure_dir(Domain ++ UserName ++ "MailDir/" ++ "new/"),
-    filelib:ensure_dir(Domain ++ UserName ++ "MailDir/" ++ "cur/"),
 
     dets:insert(upDisk, {UserName, Domain , Password}).
 
