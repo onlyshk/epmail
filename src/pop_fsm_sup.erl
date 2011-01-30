@@ -15,10 +15,10 @@ start_child(Socket, UserName, PassWord) ->
 init(_Args) ->
     RestartStrategy = {simple_one_for_one, 10, 60},
     
-    Listener = {popd_fsm, {popd_fsm, start_link, []},
+    Fsm = {popd_fsm, {popd_fsm, start_link, []},
             permanent, brutal_kill, worker, [popd_fsm]},
 
-    Children = [Listener],
+    Children = [Fsm],
     
     {ok, {RestartStrategy, Children}}.   
 

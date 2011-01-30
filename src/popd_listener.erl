@@ -30,9 +30,7 @@ start_link()  ->
 accept(Socket) ->
     case gen_tcp:accept(Socket) of
 	{ok, Sock} ->
-	    FSM = [{popd_fsm,
-		   {popd_fsm, start_link, [Sock, [], []]}, 
-		   permanent,  2000,  worker, [popd_fsm] }],
+	     io:format("Connect\n"),
 	     pop_fsm_sup:start_child(Sock, [], []),
       	     popd_fsm:set_socket(),
              gen_tcp:send(Sock, "+OK POP3 server ready \r\n"),

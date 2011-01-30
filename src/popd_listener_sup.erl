@@ -19,8 +19,8 @@ init(_Args) ->
             permanent, brutal_kill, worker, [popd_listener]},
 
     FSM_sup = {pop_fsm_sup,
-	      {pop_fsm_sup, start_link, []},
-	       permanent, 2000, supervisor, [pop_fsm_sup]},
+    	      {pop_fsm_sup, start_link, []},
+    	       permanent, 2000, supervisor, [pop_fsm_sup]},
 
     Children = [Listener, FSM_sup],
     
