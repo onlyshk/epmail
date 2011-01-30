@@ -53,4 +53,3 @@ stop() ->
 
     io:format("Temp log storage deleted \n"),
     exit(whereis(?MODULE), shutdown).
-

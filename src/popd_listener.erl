@@ -30,7 +30,11 @@ start_link()  ->
 accept(Socket) ->
     case gen_tcp:accept(Socket) of
 	{ok, Sock} ->
-	     spawn(?MODULE, receive_loop, [Sock, [], []]),
+	    FSM = [{popd_fsm,
+		   {popd_fsm, start_link, [Sock, [], []]}, 
+		   permanent,  2000,  worker, [popd_fsm] }],
+	     pop_fsm_sup:start_child(Sock, [], []),
+      	     popd_fsm:set_socket(),
              gen_tcp:send(Sock, "+OK POP3 server ready \r\n"),
   	     accept(Socket);
 	{error, Reason} ->
@@ -38,7 +42,7 @@ accept(Socket) ->
     end.
 
 loop_for_list(Socket, FileCount, UserName)  ->
-    OctetList = utils:get_list_octets(config:get_domain_dir_path(config) ++ UserName ++ "/new"),  %/home/shk/localhost/user1/MailDir/new"),
+    OctetList = utils:get_list_octets(config:get_domain_dir_path(config) ++ UserName ++ "/new"),
     lists:zipwith(fun (X1, X2) -> gen_tcp:send(Socket, [integer_to_list(X1), " " ++ integer_to_list(X2)]
 					       ++ "\r\n") end, lists:seq(1, FileCount), OctetList).
 
@@ -215,15 +219,15 @@ stop() ->
 % Callback functions
 %
 init([]) ->
+    process_flag(trap_exit, true),
     Port = config:get_pop3_port(config),
     Opts = [list, {reuseaddr, true}, 
             {keepalive, false}, {ip,{0,0,0,0}}, {active, false}],
-
+    
     case gen_tcp:listen(Port, Opts) of
 	 {ok, ListenSocket} ->
-	      process_flag(trap_exit, true),
-              spawn(?MODULE, accept, [ListenSocket]),
-	      {ok, #state{ listener = ListenSocket}};
+	    spawn(?MODULE, accept, [ListenSocket]),
+	    {ok, #state{ listener = ListenSocket}};
          {error, Reason} ->
 	     {stop, Reason}
     end.
