@@ -7,7 +7,7 @@ epmail - smtp/pop3 mail server written in erlang.
     
 In erlang shell:
 
-1> popd_listener:start_link().
+1> popd_sup:start_link().
 
 2> maildir:adduser("admin", "123").
     
@@ -21,9 +21,9 @@ Escape character is '^]'.
 +OK POP3 server ready 
 use shk
 -ERR
-user shk
+user admin
 +OK
-pass qwerty
+pass 123
 +OK
 list 1
 +OK 1 3507
