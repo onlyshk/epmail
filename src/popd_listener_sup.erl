@@ -1,3 +1,11 @@
+%%%-------------------------------------------------------------------
+%%% @author  Kuleshov Alexander
+%%% @copyright (C) 2011, 
+%%% @doc
+%%%
+%%% @end
+%%% Created : 30 Jan 2011 by  <kuleshovmail@gmail.com>
+%%%-------------------------------------------------------------------
 -module(popd_listener_sup).
 
 -behaviour(supervisor).

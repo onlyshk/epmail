@@ -68,7 +68,7 @@ is_message_pass(Password) when is_list(Password) ->
       [] ->
 	   error;
        
-      _ ->
+       _ ->
 	   error
    end.
 
