@@ -135,11 +135,12 @@ get_domain_dir_path(ConfigPath) ->
     ConfigText = read_config(ConfigPath),
     Token = string:tokens(lists:nth(8, ConfigText), " : "),
     [_ | T] = Token,
-    (lists:nth(1,T)).
+    string:tokens(lists:nth(1,T), ",").
 
 get_domain_from_dir_path([]) ->
     [];
 get_domain_from_dir_path(ConfigPath) ->
+    Slash = utils:get_os1(),
     Path = get_domain_dir_path(ConfigPath),
-    Token = string:tokens(Path, "/"),
+    Token = string:tokens(Path, Slash),
     lists:last(Token).

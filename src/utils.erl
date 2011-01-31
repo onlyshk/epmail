@@ -10,6 +10,8 @@
 -module(utils).
 
 -export([trim/1]).
+-export([get_os/0]).
+-export([get_os1/0]).
 -export([files_count/1]).
 -export([octets_summ/1]).
 -export([octets_count/1]).
@@ -63,8 +65,9 @@ octets_count(Mail) ->
 % Get sum of files size in direcotory
 %
 octets_summ(Dir) ->
+    Slash = get_os1(),
     {ok, List} = file:list_dir(Dir),
-    lists:sum([filelib:file_size(Dir ++ "/" ++ X) || X <- List]).
+    lists:sum([filelib:file_size(Dir ++ Slash ++ X) || X <- List]).
 
 %
 % Get list of files size in directory
@@ -84,12 +87,36 @@ get_octet_from_file(Dir, Mail) ->
 % Get file path by num from directory
 %
 get_file_path_by_num(Dir, Num) ->
+    Slash = get_os1(),
     {ok, List} = file:list_dir(Dir),
-    Dir ++ "/" ++ lists:nth(Num, List).
+    Dir ++ Slash ++ lists:nth(Num, List).
 
 %
 % Move to tmp directory
 %
 delete_messages(Dir, Num) ->
+    Slash = get_os1(),
     {ok, List} = file:list_dir(Dir),
-    file:delete(Dir ++ "/" ++ lists:nth(Num, List)).
+    file:delete(Dir ++ Slash ++ lists:nth(Num, List)).
+
+%
+% Get operation system version
+%
+get_os()->
+    {Osfamily, _} = os:type(),
+    case Osfamily of
+	unix ->
+	    "/new";
+	win32 ->
+	    "\new"
+    end.
+
+get_os1() ->
+    {Osfamily, _} = os:type(),
+    case Osfamily of
+	unix ->
+	    "/";
+	win32 ->
+	    "\\"
+    end.
+	

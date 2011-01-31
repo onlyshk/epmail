@@ -10,26 +10,34 @@
 -module(maildir).
 
 -export([destroy/0]).
--export([add_user/2]).
+-export([add_user/3]).
 -export([delete_user/1]).
 -export([create_key_value_user_pass_db/1]).
 -export([check_pass/2]).
+-export([find_domain/1]).
 
 %
 % Add user in dets db
 %
-add_user([], _) ->
+add_user([], _, _) ->
     error;
 
-add_user(_, []) ->
+add_user(_, [], _) ->
     error;
 
-add_user(UserName, Password) ->
-    Domain = config:get_domain_dir_path(config),
-    
-    filelib:ensure_dir(Domain ++ UserName ++ "/"),
-    filelib:ensure_dir(Domain ++ UserName ++ "/" ++ "tmp/"),
-    filelib:ensure_dir(Domain ++ UserName ++ "/" ++ "new/"),
+add_user(_, _, []) ->
+    error;
+
+%
+% Add new user mailbox
+% Domain - directory mailbox
+% UserName - User Name of new user
+% Password - password for access to user mailbox
+%
+add_user(Domain, UserName, Password) ->
+    Slash = utils:get_os1(),
+    filelib:ensure_dir(Domain ++ UserName ++ Slash),
+    filelib:ensure_dir(Domain ++ UserName ++ Slash ++ "new" ++ Slash),
 
     dets:insert(upDisk, {UserName, Domain , Password}).
 
@@ -38,6 +46,13 @@ add_user(UserName, Password) ->
 %
 delete_user(UserName) ->
     dets:delete(upDisk, {UserName, '_', '_'}).
+
+%
+% Find domain by User Name
+%
+find_domain(UserName) ->
+    [{_, Domain, _}] = dets:lookup(upDisk, UserName),
+    Domain.
 
 %
 % Create user | password dets database

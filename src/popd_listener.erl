@@ -20,7 +20,7 @@
 
 start_link()  ->
     maildir:create_key_value_user_pass_db("User"),
-    filelib:ensure_dir(config:get_domain_dir_path(config)),
+    lists:foreach(fun(X) -> filelib:ensure_dir(X) end, config:get_domain_dir_path(config)),
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 accept(Socket) ->
