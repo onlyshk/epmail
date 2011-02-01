@@ -44,72 +44,72 @@ autorization(Event, State) ->
     case gen_tcp:recv(State#state.socket, 0) of
 	{ok, Data} ->
 	    ReParseData = string:to_lower(utils:trim(Data)),
-	  
+	    
 	  %% User login command
-          try
-	      case pop_messages:is_message_user(ReParseData) of 
-		  { _ , Name } ->
-		      if
-			  (length(Name) == 1) ->
-			      gen_tcp:send(State#state.socket, pop_messages:ok_message() ++ "\r\n"),
-			      autorization(Event, State#state{username = Name});
-			  true ->
-			      autorization(Event, State)
-		      end;  
-		  error ->
-		      error  
-	      end
-	  catch _:_ -> gen_tcp:close(State#state.socket)
-          end,
+	    try
+		case pop_messages:is_message_user(ReParseData) of 
+		    { _ , Name } ->
+			if
+			    (length(Name) == 1) ->
+				gen_tcp:send(State#state.socket, pop_messages:ok_message() ++ "\r\n"),
+				autorization(Event, State#state{username = Name});
+			    true ->
+				autorization(Event, State)
+			end;  
+		    error ->
+			error  
+		end
+	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    end,
 
-	  %% password getting
-	  %% At first here we check that password must be input only
-	  %% after user name. Then we check that passs command has 1 parameter.
-	  %% and at last we check that user pass == user pass in dets db
-	  try
-	      case pop_messages:is_message_pass(ReParseData) of
-		  { _ , Pass } ->
-		      if
-			  (State#state.username == []) ->
-			      gen_tcp:send(State#state.socket, pop_messages:err_message()),
-			      autorization(Event, State#state{username = [], password = []});
-		          true ->
-			      
-			      if
-				  (length(Pass) == 1) ->
-				      case maildir:check_pass(lists:concat(State#state.username), lists:concat(Pass)) of
-					  ok ->
-					      gen_tcp:send(State#state.socket, pop_messages:ok_message() ++ "\r\n"),
-					      transaction(Event, State);
-					  error ->
-					      gen_tcp:send(State#state.socket, pop_messages:err_message() ++ 
-                                                                   "Your password wrong, pleasy try user/pass again" ++ "\r\n"),
-					      autorization(Event, State#state{username = [], password = []})
-				      end;
-				  true ->
+	    %% password getting
+	    %% At first here we check that password must be input only
+	    %% after user name. Then we check that passs command has 1 parameter.
+	    %% and at last we check that user pass == user pass in dets db
+	    try
+		case pop_messages:is_message_pass(ReParseData) of
+		    { _ , Pass } ->
+			if
+			    (State#state.username == []) ->
+				gen_tcp:send(State#state.socket, pop_messages:err_message()),
+				autorization(Event, State#state{username = [], password = []});
+			    true ->
+				
+				if
+				    (length(Pass) == 1) ->
+					case maildir:check_pass(lists:concat(State#state.username), lists:concat(Pass)) of
+					    ok ->
+						gen_tcp:send(State#state.socket, pop_messages:ok_message() ++ "\r\n"),
+						transaction(Event, State);
+					    error ->
+						gen_tcp:send(State#state.socket, pop_messages:err_message() ++ 
+								 "Your password wrong, pleasy try user/pass again" ++ "\r\n"),
+						autorization(Event, State#state{username = [], password = []})
+					end;
+				    true ->
 				      autorization(Event, State#state{username = [], password = []})
-			      end
-		      end;
-		  error ->
-		      error
-	      end
-	  catch _:_ -> gen_tcp:close(State#state.socket)
-	  end,
+				end
+			end;
+		    error ->
+			error
+		end
+	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    end,
 
-	  try
-	      case ReParseData of
-		  "quit" ->
-		      gen_tcp:send(State#state.socket, pop_messages:ok_message() ++ " POP3 server signing off\r\n"),
-		      gen_tcp:close(State#state.socket);
-		  "noop" ->
-		      gen_tcp:send(State#state.socket, pop_messages:ok_message() ++ "\r\n"),
-		      autorization(Event, State#state{username = [], password = []});
-		  _ ->
-		      gen_tcp:send(State#state.socket, pop_messages:err_message()),
-		      autorization(Event, State )
-	      end
-	  catch _:_ -> gen_tcp:close(State#state.socket)
-	  end;
+	    try
+		case ReParseData of
+		    "quit" ->
+			gen_tcp:send(State#state.socket, pop_messages:ok_message() ++ " POP3 server signing off\r\n"),
+			gen_tcp:close(State#state.socket);
+		    "noop" ->
+			gen_tcp:send(State#state.socket, pop_messages:ok_message() ++ "\r\n"),
+			autorization(Event, State#state{username = [], password = []});
+		    _ ->
+			gen_tcp:send(State#state.socket, pop_messages:err_message()),
+			autorization(Event, State )
+		end
+	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    end;
 
 	{error, closed} ->
 	    ok

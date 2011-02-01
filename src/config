@@ -1,17 +1,8 @@
-smtp_server_name : _
-
-pop3_server_name : _
-
-smtp_port : 2525
-
-pop3_port : 110
-
-smtp_server_start : false
-
-pop3_server_start : false
-
-error_logger_path : logger
-
-mail_dir_path : /home/shk/localhost/
-
-
+{smtp_server_name, "_"}.
+{pop3_server_name, "_"}.
+{smtp_port, 25}.
+{pop3_port, 110}.
+{smtp_server_start, false}.
+{pop3_server_start, false}.
+{error_logger_path, logger}.
+{domain, ["/home/shk/localhost/"]}.

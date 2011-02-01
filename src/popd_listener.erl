@@ -20,7 +20,6 @@
 
 start_link()  ->
     maildir:create_key_value_user_pass_db("User"),
-    lists:foreach(fun(X) -> filelib:ensure_dir(X) end, config:get_domain_dir_path(config)),
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 accept(Socket) ->
@@ -43,10 +42,13 @@ stop() ->
 %
 init([]) ->
     process_flag(trap_exit, true),
-    Port = config:get_pop3_port(config),
+    {ok, Config} = config:read(config),
+
+    Port = 110,%config:get_key(pop3_port, Config),
+    
     Opts = [list, {reuseaddr, true}, 
             {keepalive, false}, {ip,{0,0,0,0}}, {active, false}],
-    
+        
     case gen_tcp:listen(Port, Opts) of
 	 {ok, ListenSocket} ->
 	    spawn(?MODULE, accept, [ListenSocket]),

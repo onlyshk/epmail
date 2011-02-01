@@ -28,7 +28,7 @@ add_user(_, [], _) ->
 add_user(_, _, []) ->
     error;
 
-%
+						%
 % Add new user mailbox
 % Domain - directory mailbox
 % UserName - User Name of new user

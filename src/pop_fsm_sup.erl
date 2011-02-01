@@ -26,7 +26,7 @@ init(_Args) ->
     
     Fsm = {underfined, {popd_fsm, start_link, []},
             permanent, brutal_kill, worker, [popd_fsm]},
-
+    
     Children = [Fsm],
     
     {ok, {RestartStrategy, Children}}.   

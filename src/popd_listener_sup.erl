@@ -22,14 +22,14 @@ start_child(Child) ->
 
 init(_Args) ->
     RestartStrategy = {one_for_one, 10, 60},
-    
+       
     Listener = {popd_listener, {popd_listener, start_link, []},
             permanent, brutal_kill, worker, [popd_listener]},
 
     FSM_sup = {pop_fsm_sup,
     	      {pop_fsm_sup, start_link, []},
     	       permanent, 2000, supervisor, [pop_fsm_sup]},
-
+     
     Children = [Listener, FSM_sup],
     
     {ok, {RestartStrategy, Children}}.   

@@ -24,7 +24,8 @@
 % Client API
 %
 start_link() ->
-    LoggerPath = config:get_log_path(config),
+    {ok, Config} = config:get(logger,config),
+    LoggerPath = Config,
     case LoggerPath of
 	 '_' ->
 	    stop;

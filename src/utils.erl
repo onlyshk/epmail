@@ -73,8 +73,9 @@ octets_summ(Dir) ->
 % Get list of files size in directory
 %
 get_list_octets(Dir) ->
+    Slash = get_os1(),
     {ok, List} = file:list_dir(Dir),
-    [filelib:file_size(Dir ++ "/" ++ X) || X <- List].
+    [filelib:file_size(Dir ++ Slash ++ X) || X <- List].
 
 %
 % Get file size from file
