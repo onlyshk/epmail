@@ -6,6 +6,7 @@
 %%% @end
 %%% Created : 10 Jan 2011 by  <kuleshovmail@gmail.com>
 %%%-------------------------------------------------------------------
+
 -module(config).
 
 -export([get_key/2]).

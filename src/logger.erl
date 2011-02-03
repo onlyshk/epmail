@@ -6,10 +6,11 @@
 %%% @end
 %%% Created : 13 Jan 2011 by  <kuleshovmail@gmail.com>
 %%%-------------------------------------------------------------------
+
 -module(logger).
 
--author('kuleshovmail@gmail.com').
 -vsn('0.1').
+-author('kuleshovmail@gmail.com').
 
 -behavior(gen_server).
 

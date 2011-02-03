@@ -6,9 +6,13 @@
 %%% @end
 %%% Created : 28 Jan 2011 by  <kuleshovmail@gmail.com>
 %%%-------------------------------------------------------------------
+
 -module(popd_sup).
 
 -behaviour(supervisor).
+
+-vsn('0.1').
+-author('kuleshovmail@gmail.com').
 
 %% API
 -export([start_link/0]).

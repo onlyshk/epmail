@@ -6,9 +6,13 @@
 %%% @end
 %%% Created : 14 Jan 2011 by  <kuleshovmail@gmail.com>
 %%%-------------------------------------------------------------------
+
 -module(logger_sup).
 
 -behaviour(supervisor).
+
+-vsn('0.1').
+-author('kuleshovmail@gmail.com').
 
 %% API
 -export([start_link/0, stop/0]).

@@ -21,6 +21,8 @@
 -export([get_octet_from_file/2]).
 -export([get_file_path_by_num/2]).
 
+-vsn('0.1').
+-author('kuleshovmail@gmail.com').
 
 %
 % Trim string

@@ -6,6 +6,7 @@
 %%% @end
 %%% Created : 30 Jan 2011 by  <kuleshovmail@gmail.com>
 %%%-------------------------------------------------------------------
+
 -module(popd_listener_sup).
 
 -behaviour(supervisor).
@@ -13,6 +14,9 @@
 -export([start_link/0]).
 -export([init/1, stop/0]).
 -export([start_child/1]).
+
+-vsn('0.1').
+-author('kuleshovmail@gmail.com').
 
 start_link() ->
     supervisor:start_link({local,?MODULE}, ?MODULE, []).

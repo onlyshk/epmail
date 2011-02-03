@@ -16,6 +16,9 @@
 -export([check_pass/2]).
 -export([find_domain/1]).
 
+-vsn('0.1').
+-author('kuleshovmail@gmail.com').
+
 %
 % Add user in dets db
 %

@@ -6,9 +6,13 @@
 %%% @end
 %%% Created : 28 Jan 2011 by  <kuleshovmail@gmail.com>
 %%%-------------------------------------------------------------------
+
 -module(popd_fsm).
 
 -behaviour(gen_fsm).
+
+-vsn('0.1').
+-author('kuleshovmail@gmail.com').
 
 %% API
 -export([stop/0]).

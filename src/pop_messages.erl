@@ -6,6 +6,7 @@
 %%% @end
 %%% Created : 19 Jan 2011 by  <kuleshovmail@gmail.com>
 %%%------------------------------------------------------------------
+
 -module(pop_messages).
 
 -export([err_message/0, ok_message/0]).
@@ -15,6 +16,9 @@
 -export([is_message_list/1]).
 -export([is_message_retr/1]).
 -export([is_message_dele/1]).
+
+-vsn('0.1').
+-author('kuleshovmail@gmail.com').
 
 err_message() ->
     ["-ERR\r\n"].
