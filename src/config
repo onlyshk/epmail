@@ -1,8 +1,21 @@
+%
+% EPmail configuration system
+%
+
+%% Servers name
 {smtp_server_name, "_"}.
 {pop3_server_name, "_"}.
+
+%% Ports
 {smtp_port, 25}.
 {pop3_port, 110}.
+
+%% Server start true/false
 {smtp_server_start, false}.
 {pop3_server_start, false}.
+
+%% Error log file path
 {error_logger_path, logger}.
+
+%% Mailbox file path
 {domain, ["/home/shk/localhost/"]}.
