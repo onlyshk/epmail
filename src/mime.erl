@@ -19,3 +19,43 @@ message(From, To, Subject) ->
     "From: " ++ From ++ "\r\n" ++
     "To: " ++ To ++ "\r\n" ++
     "Subject: " ++ Subject ++ "\r\n".
+
+get_mime_type(File) ->
+    case filename:extension(File) of
+	".txt" ->
+	    "text/plain";
+	".jpeg"	->
+	    "image/jpeg";
+	".zip" ->
+	    "application/x-compressed";
+	".gz" ->
+	    "application/x-compressed";
+	".png" ->
+	    "image/png";
+	".bz2" ->
+	    "application/x-bzip2";
+	".doc" ->
+	    "application/msword";
+	".exe" ->
+	    "application/octet-stream";
+	".gzip" ->
+	    "application/x-gzip";
+	".htm" ->
+	    "text/html";
+	".html" ->
+	    "text/html";
+	".java" ->
+	    "text/plain";
+	".jpg" ->
+	    "image/jpeg";
+	".mp2" ->
+	    "audio/mpeg";
+	".mp3" ->
+	    "audio/mpeg3";
+	 ".mpeg"->
+	    "video/mpeg";
+	".rtf" ->
+	    "application/rtf";
+	".sh" ->
+	    "application/x-bsh"
+    end.

@@ -158,7 +158,7 @@ transaction(Event, State) ->
 			error
 		end
 	    catch _:_ -> gen_tcp:close(State#state.socket)
-	    end,
+	    end,   
 
 	    %% RETR command
 	    %% +OK || -ERR n message (m octets)
@@ -213,6 +213,17 @@ transaction(Event, State) ->
 		       gen_tcp:send(State#state.socket, integer_to_list(MessageCount) ++ " "),
 		       gen_tcp:send(State#state.socket, integer_to_list(Octet) ++ "\r\n"),
 		       transaction(Event, State);
+		    "rset" ->
+			TmpDir = utils:get_os_for_tmp(),
+			Slash = utils:get_os1(),
+			DomainForRSET = maildir:find_domain(lists:concat(State#state.username)),
+			MessCount = utils:files_count(DomainForRSET ++ State#state.username ++ TmpDir),
+			Octet = utils:octets_summ(DomainForRSET ++ State#state.username ++ TmpDir),
+			gen_tcp:send(State#state.socket, "+OK maildrop has " ++ integer_to_list(MessCount) ++ " messages"),
+			gen_tcp:send(State#state.socket, " (" ++ integer_to_list(Octet) ++ " octets)" ++ "\r\n"),
+			utils:copy_files_for_rset(DomainForRSET ++ State#state.username ++ TmpDir ++ Slash,
+						  DomainForRSET ++ State#state.username ++ NewDir),
+			transaction(Event, State);
 		    _ ->
 			gen_tcp:send(State#state.socket, pop_messages:err_message()),
 			transaction(Event, State )

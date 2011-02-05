@@ -48,7 +48,7 @@ init([]) ->
     process_flag(trap_exit, true),
     {ok, Config} = config:read(config),
 
-    Port = 110,%config:get_key(pop3_port, Config),
+    Port = config:get_key(pop3_port, Config),
     
     Opts = [list, {reuseaddr, true}, 
             {keepalive, false}, {ip,{0,0,0,0}}, {active, false}],

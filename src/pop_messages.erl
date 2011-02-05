@@ -16,6 +16,7 @@
 -export([is_message_list/1]).
 -export([is_message_retr/1]).
 -export([is_message_dele/1]).
+-export([is_message_top/1]).
 
 -vsn('0.1').
 -author('kuleshovmail@gmail.com').
