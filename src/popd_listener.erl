@@ -23,7 +23,17 @@
 -define(SERVER, ?MODULE).
 
 start_link()  ->
-    maildir:create_key_value_user_pass_db("User"),
+   
+    {ok, Config} = config:read(config),
+    UserStorage = config:get_key(user_storage, Config),
+
+    case UserStorage of
+	dets ->
+	    maildir:create_key_value_user_pass_db("User");
+	_ ->
+	    mnesia
+    end,
+
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 accept(Socket) ->

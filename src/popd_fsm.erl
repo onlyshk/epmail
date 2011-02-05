@@ -48,7 +48,7 @@ autorization(Event, State) ->
     case gen_tcp:recv(State#state.socket, 0) of
 	{ok, Data} ->
 	    ReParseData = string:to_lower(utils:trim(Data)),
-	    
+	        	        	        
 	  %% User login command
 	    try
 		case pop_messages:is_message_user(ReParseData) of 

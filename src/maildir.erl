@@ -19,6 +19,9 @@
 -vsn('0.1').
 -author('kuleshovmail@gmail.com').
 
+-record(users, {username,
+	        password}).
+
 %
 % Add user in dets db
 %
@@ -42,20 +45,45 @@ add_user(Domain, UserName, Password) ->
     filelib:ensure_dir(Domain ++ UserName ++ Slash),
     filelib:ensure_dir(Domain ++ UserName ++ Slash ++ "new" ++ Slash),
 
-    dets:insert(upDisk, {UserName, Domain , Password}).
+    {ok, Config} = config:read(config),
+    UserStorage = config:get_key(user_storage, Config),
+
+    case UserStorage of
+	mnesia ->
+	    User = #users{username = UserName, password = Password},
+	    mnesia:transaction(fun() -> mnesia:write(User) end);
+	_ ->
+	    dets:insert(upDisk, {UserName, Domain , Password})
+    end.
 
 %
 % Deleting user from dets db
 %
 delete_user(UserName) ->
-    dets:delete(upDisk, {UserName, '_', '_'}).
+    {ok, Config} = config:read(config),
+    UserStorage = config:get_key(user_storage, Config),
 
+    case UserStorage of
+	mnesia ->
+	    mnesia:transaction(fun() -> mnesia:delete({users, UserName}) end);
+	_ ->
+	    dets:delete(upDisk, {UserName, '_', '_'})
+    end.
 %
 % Find domain by User Name
 %
 find_domain(UserName) ->
-    [{_, Domain, _}] = dets:lookup(upDisk, UserName),
-    Domain.
+    {ok, Config} = config:read(config),
+    UserStorage = config:get_key(user_storage, Config),
+
+    case UserStorage of
+	mnesia ->
+	   {_, [{_,Domain,_}]} = mnesia:transaction(fun() -> mnesia:read({users, UserName}) end),
+	    Domain;
+	_ ->
+	    [{_, Domain, _}] = dets:lookup(upDisk, UserName),
+	    Domain
+    end.
 
 %
 % Create user | password dets database
@@ -78,16 +106,30 @@ destroy() ->
 % Check username's password
 %
 check_pass(UserName, Password) ->
-    case dets:lookup(upDisk, UserName) of
-	[{_,_,P}]->
-	     if
-		 (Password =:= P) ->
-		     ok;
-		 true ->
-		     error
-	     end;
-	[] ->
-	    error
+    {ok, Config} = config:read(config),
+    UserStorage = config:get_key(user_storage, Config),
+
+    case UserStorage of
+	mnesia ->
+	    {_, [{_,_,Pass}]} = mnesia:transaction(fun() -> mnesia:read({users, UserName}) end),
+	    if
+		(Password =:= Pass) ->
+		    ok;
+		true ->
+		    error
+	    end;
+	_->
+	    case dets:lookup(upDisk, UserName) of
+		[{_,_,P}]->
+		    if
+			(Password =:= P) ->
+			    ok;
+			true ->
+			    error
+		    end;
+		[] ->
+		    error
+	    end
     end.
 	    
 	    

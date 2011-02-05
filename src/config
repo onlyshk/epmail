@@ -1,8 +1,30 @@
+%
+% | EPmail configuration file
+%
+
+%% Smtp server name
 {smtp_server_name, "_"}.
+
+%% Pop3 server name
 {pop3_server_name, "_"}.
+
+%% Smtp port
 {smtp_port, 25}.
+
+%% POP3 port
 {pop3_port, 110}.
+
+%% Smtp server start true | false
 {smtp_server_start, false}.
+
+%% POP3 server start true | false
 {pop3_server_start, false}.
+
+%% Error logger path
 {error_logger_path, logger}.
+
+%% Domain name local storage
 {domain, ["/home/shk/localhost/"]}.
+
+%% User storage dets || mnesia
+{user_storage, mnesia}.
