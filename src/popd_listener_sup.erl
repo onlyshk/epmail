@@ -25,18 +25,6 @@ start_child(Child) ->
     supervisor:start_child(?MODULE, [Child]).
 
 init(_Args) ->
-    {ok, Config} = config:read(config),
-    UserStorage = config:get_key(user_storage, Config),
-
-    case UserStorage of
-	mnesia ->
-	    mnesia:create_schema([node()]),
-	    mnesia:start(),
-	    mnesia:create_table(users, []);
-	_ ->
-	    dets
-    end,
-    
     RestartStrategy = {one_for_one, 10, 60},
        
     Listener = {popd_listener, {popd_listener, start_link, []},

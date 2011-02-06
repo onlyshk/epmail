@@ -28,6 +28,19 @@ start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 init([]) ->
+
+    {ok, Config} = config:read(config),
+    UserStorage = config:get_key(user_storage, Config),
+
+    case UserStorage of
+	mnesia ->
+	    mnesia:create_schema([node()]),
+	    mnesia:start(),
+	    mnesia:create_table(users, []);
+	_ ->
+	    dets
+    end,
+    
     RestartStrategy = {one_for_one, 5, 600},
  
     ListenerSup = {popd_listener_sup,

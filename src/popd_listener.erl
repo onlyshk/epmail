@@ -22,13 +22,14 @@
 
 -define(SERVER, ?MODULE).
 
-start_link()  ->
-   
+start_link()  ->    
     {ok, Config} = config:read(config),
     UserStorage = config:get_key(user_storage, Config),
 
     case UserStorage of
 	dets ->
+	    maildir:create_key_value_user_pass_db("User");
+	ets ->
 	    maildir:create_key_value_user_pass_db("User");
 	_ ->
 	    mnesia

@@ -26,5 +26,5 @@
 %% Domain name local storage
 {domain, ["/home/shk/localhost/"]}.
 
-%% User storage dets || mnesia
-{user_storage, mnesia}.
+%% User storage dets || mnesia || ets
+{user_storage, dets}.
