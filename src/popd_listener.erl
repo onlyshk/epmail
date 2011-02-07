@@ -22,7 +22,7 @@
 
 -define(SERVER, ?MODULE).
 
-start_link()  ->    
+start_link()  ->
     {ok, Config} = config:read(config),
     UserStorage = config:get_key(user_storage, Config),
 

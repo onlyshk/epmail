@@ -40,11 +40,14 @@ start_link()  ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 accept(Socket) ->
+    {ok, Config} = config:read(config),
+    SmtpServerName = config:get_key(smtp_server_name, Config),
+   
     case gen_tcp:accept(Socket) of
 	{ok, Sock} ->
-	     {ok, Pid} = smtp_fsm_sup:start_child(Sock),
+	     {ok, Pid} = smtp_fsm_sup:start_child(Sock, []),
 	     smtp_fsm:set_socket(Pid),
-             gen_tcp:send(Sock, "+OK SMTP server ready \r\n"),
+             gen_tcp:send(Sock, integer_to_list(220) ++ " " ++ SmtpServerName ++ " " ++ "Simple Mail Transfer Service Ready\r\n"),
   	     accept(Socket);
 	{error, Reason} ->
 	    Reason

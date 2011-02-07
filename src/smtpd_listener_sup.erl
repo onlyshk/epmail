@@ -26,7 +26,7 @@ start_child(Child) ->
 
 init(_Args) ->
     RestartStrategy = {one_for_one, 10, 60},
-    
+        
     Listener = {smtpd_listener, {smtpd_listener, start_link, []},
             permanent, brutal_kill, worker, [smtpd_listener]},
 

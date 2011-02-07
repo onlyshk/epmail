@@ -17,7 +17,7 @@
 %% API
 -export([stop/0]).
 -export([set_socket/1]).
--export([start_link/1]).
+-export([start_link/2]).
 
 %% gen_fsm callbacks
 -export([init/1, autorization/2, state_name/3, handle_event/3,
@@ -25,12 +25,13 @@
 
 -define(SERVER, ?MODULE).
 
--record(state, {socket
+-record(state, {socket,
+		client
 	        }).
 
 %%% API
-start_link(Socket) ->
-    gen_fsm:start_link(?MODULE, [Socket], []).
+start_link(Socket, Client) ->
+    gen_fsm:start_link(?MODULE, [Socket, Client], []).
 
 stop() ->
    gen_fsm:send_all_state_event(?SERVER, stop).
@@ -39,18 +40,57 @@ set_socket(Pid) ->
     gen_fsm:send_event(Pid, {autorization}).
 
 %%% gen_fsm callbacks
-init([Socket]) ->
-    {ok, autorization, #state{socket = Socket}}.
+init([Socket, Client]) ->
+    {ok, autorization, #state{socket = Socket, client = Client}}.
 
 autorization(Event, State) ->
     case gen_tcp:recv(State#state.socket, 0) of
 	{ok, Data} ->
 	    ReParseData = string:to_lower(utils:trim(Data)),
 
+	    {ok, Config} = config:read(config),
+	    SmtpServerName = config:get_key(smtp_server_name, Config),
+
+	    %% HELO command
+	    try
+		case smtp_messages:is_helo_message(ReParseData) of 
+		    { _ , Helo } ->
+			if
+			    (length(Helo) == 1) ->
+				gen_tcp:send(State#state.socket, integer_to_list(250) ++ " " ++ SmtpServerName ++  "\r\n"),
+				autorization(Event, State#state{client = Helo});
+			    true ->
+				autorization(Event, State)
+			end;  
+		    error ->
+			error  
+		end
+	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    end,
+
+	    %% EHLO command
+	    try
+		case smtp_messages:is_ehlo_message(ReParseData) of 
+		    { _ , Ehlo } ->
+			if
+			    (length(Ehlo) == 1) ->
+				gen_tcp:send(State#state.socket, "250-EPmail smtp server is pleased to meet you" ++  "\r\n"),
+				gen_tcp:send(State#state.socket, "250-HELP" ++ "\r\n"),
+				gen_tcp:send(State#state.socket, "250 EHLO" ++ "\r\n"),
+				autorization(Event, State#state{client = Ehlo});
+			    true ->
+				autorization(Event, State)
+			end;  
+		    error ->
+			error  
+		end
+	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    end,
+	    
 	    try
 		case ReParseData of
 		    "quit" ->
-			gen_tcp:send(State#state.socket, pop_messages:ok_message() ++ " SMTP server signing off\r\n"),
+			gen_tcp:send(State#state.socket, integer_to_list(221) ++ " " ++ "2.0.0" ++ " Bye" ++ "\r\n"),
 			gen_tcp:close(State#state.socket);
 		    "noop" ->
 			gen_tcp:send(State#state.socket, pop_messages:ok_message() ++ "\r\n"),
