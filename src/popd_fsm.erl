@@ -189,7 +189,7 @@ transaction(Event, State) ->
 			gen_tcp:send(State#state.socket, "+OK message" ++ " "),
 			gen_tcp:send(State#state.socket, Dele ++ " "),
 			gen_tcp:send(State#state.socket, "deleted \r\n"),
-			utils:delete_messages(Domain ++ State#state.username ++ NewDir, list_to_integer(Dele)),
+			utils:delete_messages(Domain ++ State#state.username, list_to_integer(Dele)),
 			transaction(Event, State);
 		    error ->
 			error

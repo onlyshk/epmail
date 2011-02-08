@@ -154,7 +154,7 @@ mail_transaction(Event, State) ->
 	    try
 		case ReParseData of
 		    "quit" ->
-			gen_tcp:send(State#state.socket, integer_to_list(221) ++ " " ++ "2.0.0" ++ " Bye" ++ "\r\n"),
+			gen_tcp:send(State#state.socket, "221 EPmail Service closing transmission channel" ++ "\r\n"),
 			gen_tcp:close(State#state.socket);
 		    "noop" ->
 			gen_tcp:send(State#state.socket, pop_messages:ok_message() ++ "\r\n"),
@@ -162,9 +162,13 @@ mail_transaction(Event, State) ->
 		    "rset" ->
 			gen_tcp:send(State#state.socket, "250 OK \r\n"),
 			autorization(Event, State#state{client = underfined, rcpts = []});
+		    "data" ->
+			gen_tcp:send(State#state.socket, "354 Enter mail, end with . on a line by itself \r\n"),
+			gen_tcp:send(State#state.socket, "250 OK\r\n"),
+			autorization(Event, State#state{client = underfined, rcpts = []});
 		    _ ->
 			gen_tcp:send(State#state.socket, pop_messages:err_message()),
-			autorization(Event, State )
+			mail_transaction(Event, State )
 		end
 	    catch _:_ -> gen_tcp:close(State#state.socket)
 	    end;

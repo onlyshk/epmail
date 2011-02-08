@@ -101,18 +101,17 @@ get_file_path_by_num(Dir, Num) ->
 % Move to tmp directory
 %
 delete_messages(Dir, Num) ->
-    Slash = get_os1(),
-    {ok, List} = file:list_dir(Dir),
-  
-    {ok, ID1} = file:open(Dir ++ lists:nth(Num, List), [read]),
-    {ok, ID2} = file:open(Dir ++ Slash ++ "tmp" ++ Slash , [write]),
-
+    {ok, List} = file:list_dir(Dir ++ "/new/"),
+    
+    {ok, ID1} = file:open(Dir ++ "new/" ++ lists:nth(Num, List), [read]),
+    {ok, ID2} = file:open(Dir ++ "tmp/" ++ lists:nth(Num, List), [append]),
+    
     file:copy(ID1, ID2),
 
     ok = file:close(ID1),
     ok = file:close(ID2),
-
-    file:delete(Dir ++ Slash ++ lists:nth(Num, List)).
+	      
+    file:delete(Dir ++ "new/" ++ lists:nth(Num, List)).
 
 %
 % Copy files when RSET command received
@@ -124,7 +123,6 @@ copy_files_for_rset(Dir, NewDir) ->
     lists:foreach(fun(X) ->
 			  {ok, ID1} = file:open(Dir ++ Slash ++ X, [read]),
 			  {ok, ID2} = file:open(NewDir ++ Slash ++ X, [write]),
-			  io:format(NewDir),
 			  file:copy(ID1, ID2),
 			  ok = file:close(ID1),
 			  ok = file:close(ID2),
