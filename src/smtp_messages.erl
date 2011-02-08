@@ -12,6 +12,7 @@
 -export([is_helo_message/1]).
 -export([is_ehlo_message/1]).
 -export([is_mail_message/1]).
+-export([is_rcpt_message/1]).
 
 %
 % HELO smtp message
@@ -88,7 +89,7 @@ is_mail_message(MailMessage) ->
        [_] ->
 	   error;
  
-       "ehlo" ->
+       "mail from" ->
 	   error;
        
        [] ->
@@ -98,3 +99,29 @@ is_mail_message(MailMessage) ->
 	   error
    end.
 
+%
+% RCPT to smtp message
+% SMTP SEND: RCPT TO: <user@localhhost>
+%
+is_rcpt_message([]) ->
+    error;
+is_rcpt_message(RcptMessage) ->
+        [H | T] = string:tokens(RcptMessage, ":"),
+    case [H | T] of
+	["rcpt to", _] ->
+	    {H, T};
+	        [_, _] ->
+	   error;
+      
+       [_] ->
+	   error;
+ 
+       "rcpt to" ->
+	   error;
+       
+       [] ->
+	   error;
+       
+       _ ->
+	   error
+   end.

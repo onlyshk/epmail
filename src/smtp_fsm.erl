@@ -26,7 +26,8 @@
 -define(SERVER, ?MODULE).
 
 -record(state, {socket,
-		client
+		client,
+		rcpts = []
 	        }).
 
 %%% API
@@ -121,6 +122,23 @@ mail_transaction(Event, State) ->
 			    (length(Mail) > 0) ->
 				gen_tcp:send(State#state.socket, "250 OK \r\n"),
 				mail_transaction(Event, State#state{client = Mail});
+			    true ->
+				mail_transaction(Event, State)
+			end;  
+		    error ->
+			error  
+		end
+	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    end,
+
+	    %% RCPT TO: command
+	    try
+		case smtp_messages:is_rcpt_message(ReParseData) of 
+		    { _ , Rcpt } ->
+			if
+			    (length(Rcpt) > 0) ->
+				gen_tcp:send(State#state.socket, "250 OK \r\n"),
+				mail_transaction(Event, State#state{rcpts = [ Rcpt | rcpts]});
 			    true ->
 				mail_transaction(Event, State)
 			end;  
