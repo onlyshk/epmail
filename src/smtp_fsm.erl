@@ -96,6 +96,9 @@ autorization(Event, State) ->
 		    "noop" ->
 			gen_tcp:send(State#state.socket, pop_messages:ok_message() ++ "\r\n"),
 			autorization(Event, State);
+		    "rset" ->
+			gen_tcp:send(State#state.socket, "250 OK \r\n"),
+			autorization(Event, State#state{client = underfined, rcpts = []});
 		    _ ->
 			gen_tcp:send(State#state.socket, pop_messages:err_message()),
 			autorization(Event, State )
@@ -155,7 +158,10 @@ mail_transaction(Event, State) ->
 			gen_tcp:close(State#state.socket);
 		    "noop" ->
 			gen_tcp:send(State#state.socket, pop_messages:ok_message() ++ "\r\n"),
-			autorization(Event, State);
+			mail_transaction(Event, State);
+		    "rset" ->
+			gen_tcp:send(State#state.socket, "250 OK \r\n"),
+			autorization(Event, State#state{client = underfined, rcpts = []});
 		    _ ->
 			gen_tcp:send(State#state.socket, pop_messages:err_message()),
 			autorization(Event, State )
