@@ -26,6 +26,10 @@ err_message() ->
 ok_message() ->
     ["+OK"].
 
+%
+% POP3 USER USER_NAME message
+% +OK || -ERR
+%
 is_message_user([]) ->
     error;
 is_message_user(UserName) when is_list(UserName) ->
@@ -52,6 +56,10 @@ is_message_user(UserName) when is_list(UserName) ->
 	   error
    end.
 
+%
+% POP3 PASS PASSWORD message
+% +OK || -ERR
+%
 is_message_pass([]) ->
     error;
 is_message_pass(Password) when is_list(Password) ->
@@ -76,6 +84,10 @@ is_message_pass(Password) when is_list(Password) ->
 	   error
    end.
 
+%
+% POP3 LIST || num message
+% +OK num message octets message
+%
 is_message_list([]) ->
     error;
 is_message_list(Message)  ->
@@ -102,6 +114,12 @@ is_message_list(Message)  ->
 	   error
    end.
 
+%
+% POP3 RETR num message
+% +OK
+% message data
+% .
+%
 is_message_retr([]) ->
     error;
 is_message_retr(Message)  ->
@@ -126,6 +144,10 @@ is_message_retr(Message)  ->
 	      
    end.
 
+%
+% POP3 DELE  num message
+% +OK message num deleted
+%
 is_message_dele([]) ->
     error;
 is_message_dele(Message) ->

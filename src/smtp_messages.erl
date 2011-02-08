@@ -11,7 +11,12 @@
 
 -export([is_helo_message/1]).
 -export([is_ehlo_message/1]).
+-export([is_mail_message/1]).
 
+%
+% HELO smtp message
+% SMTP SEND: HELO (for supporting old message)
+%
 is_helo_message([]) ->
     error;
 is_helo_message(Message) ->
@@ -37,6 +42,10 @@ is_helo_message(Message) ->
 	   error
    end.
 
+%
+% EHLO smtp message
+% SMTP SEND: EHLO [user@localhhost]
+%
 is_ehlo_message([]) ->
     error;
 is_ehlo_message(Message) ->
@@ -61,3 +70,31 @@ is_ehlo_message(Message) ->
        _ ->
 	   error
    end.
+
+%
+% MAIL FROM smtp message
+% SMTP SEND: MAIL FROM: <user@localhhost>
+%
+is_mail_message([]) ->
+    error;
+is_mail_message(MailMessage) ->
+    [H | T] = string:tokens(MailMessage, ":"),
+    case [H | T] of
+	["mail from", _] ->
+	    {H, T};
+	        [_, _] ->
+	   error;
+      
+       [_] ->
+	   error;
+ 
+       "ehlo" ->
+	   error;
+       
+       [] ->
+	   error;
+       
+       _ ->
+	   error
+   end.
+

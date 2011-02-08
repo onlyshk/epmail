@@ -20,7 +20,7 @@
 -export([start_link/2]).
 
 %% gen_fsm callbacks
--export([init/1, autorization/2, state_name/3, handle_event/3,
+-export([init/1, autorization/2, mail_transaction/2, state_name/3, handle_event/3,
 	 handle_sync_event/4, handle_info/3, terminate/3, code_change/4]).
 
 -define(SERVER, ?MODULE).
@@ -58,7 +58,7 @@ autorization(Event, State) ->
 			if
 			    (length(Helo) == 1) ->
 				gen_tcp:send(State#state.socket, integer_to_list(250) ++ " " ++ SmtpServerName ++  "\r\n"),
-				autorization(Event, State#state{client = Helo});
+				mail_transaction(Event, State);
 			    true ->
 				autorization(Event, State)
 			end;  
@@ -77,7 +77,7 @@ autorization(Event, State) ->
 				gen_tcp:send(State#state.socket, "250-EPmail smtp server is pleased to meet you" ++  "\r\n"),
 				gen_tcp:send(State#state.socket, "250-HELP" ++ "\r\n"),
 				gen_tcp:send(State#state.socket, "250 EHLO" ++ "\r\n"),
-				autorization(Event, State#state{client = Ehlo});
+				mail_transaction(Event, State);
 			    true ->
 				autorization(Event, State)
 			end;  
@@ -107,6 +107,48 @@ autorization(Event, State) ->
     end,
     
     {next_state, autorization, State}.
+
+mail_transaction(Event, State) ->
+    case gen_tcp:recv(State#state.socket, 0) of
+	{ok, Data} ->
+	    ReParseData = string:to_lower(utils:trim(Data)),
+
+	    %% MAIL FROM command
+	    try
+		case smtp_messages:is_mail_message(ReParseData) of 
+		    { _ , Mail } ->
+			if
+			    (length(Mail) > 0) ->
+				gen_tcp:send(State#state.socket, "250 OK \r\n"),
+				mail_transaction(Event, State#state{client = Mail});
+			    true ->
+				mail_transaction(Event, State)
+			end;  
+		    error ->
+			error  
+		end
+	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    end,
+
+	    try
+		case ReParseData of
+		    "quit" ->
+			gen_tcp:send(State#state.socket, integer_to_list(221) ++ " " ++ "2.0.0" ++ " Bye" ++ "\r\n"),
+			gen_tcp:close(State#state.socket);
+		    "noop" ->
+			gen_tcp:send(State#state.socket, pop_messages:ok_message() ++ "\r\n"),
+			autorization(Event, State);
+		    _ ->
+			gen_tcp:send(State#state.socket, pop_messages:err_message()),
+			autorization(Event, State )
+		end
+	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    end;
+	    
+	{error, closed} ->
+	    ok
+    end,
+    {next_state, mail_transaction, State}.
 
 state_name(_Event, _From, State) ->
     Reply = ok,
