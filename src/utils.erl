@@ -102,16 +102,16 @@ get_file_path_by_num(Dir, Num) ->
 %
 delete_messages(Dir, Num) ->
     {ok, List} = file:list_dir(Dir ++ "/new/"),
-    
-    {ok, ID1} = file:open(Dir ++ "new/" ++ lists:nth(Num, List), [read]),
-    {ok, ID2} = file:open(Dir ++ "tmp/" ++ lists:nth(Num, List), [append]),
+    io:format(Dir),
+    {ok, ID1} = file:open(Dir ++ "/new/" ++ lists:nth(Num, List), [read]),
+    {ok, ID2} = file:open(Dir ++ "/tmp/" ++ lists:nth(Num, List), [append]),
     
     file:copy(ID1, ID2),
 
     ok = file:close(ID1),
     ok = file:close(ID2),
 	      
-    file:delete(Dir ++ "new/" ++ lists:nth(Num, List)).
+    file:delete(Dir ++ "/new/" ++ lists:nth(Num, List)).
 
 %
 % Copy files when RSET command received
