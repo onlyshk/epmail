@@ -159,12 +159,20 @@ mail_transaction(Event, State) ->
 		    "noop" ->
 			gen_tcp:send(State#state.socket, pop_messages:ok_message() ++ "\r\n"),
 			mail_transaction(Event, State);
-		    "rset" ->
-			gen_tcp:send(State#state.socket, "250 OK \r\n"),
-			autorization(Event, State#state{client = underfined, rcpts = []});
 		    "data" ->
 			gen_tcp:send(State#state.socket, "354 Enter mail, end with . on a line by itself \r\n"),
 			gen_tcp:send(State#state.socket, "250 OK\r\n"),
+			
+			case gen_tcp:recv(State#state.socket, 0) of
+			    {ok, Packet} ->
+				Packet;
+			    {error, Reason} ->
+				io:format(Reason)
+			end,
+			    
+			autorization(Event, State#state{client = underfined, rcpts = []});
+		    "rset" ->
+			gen_tcp:send(State#state.socket, "250 OK \r\n"),
 			autorization(Event, State#state{client = underfined, rcpts = []});
 		    _ ->
 			gen_tcp:send(State#state.socket, pop_messages:err_message()),
