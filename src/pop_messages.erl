@@ -155,7 +155,7 @@ is_message_dele(Message) ->
    case [H | T] of
       ["dele", _] ->
 	  {H, T};
-       
+
       [_, _] ->
 	  error;
        

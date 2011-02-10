@@ -15,11 +15,12 @@
 -export([get_head/1]).
 -export([files_count/1]).
 -export([octets_summ/1]).
--export([octets_count/1]). 
+-export([octets_count/1]).
 -export([get_list_octets/1]).
 -export([get_os_for_tmp/0]).
 -export([trim_whitespace/1]).
 -export([delete_messages/2]).
+-export([split_mail_address/1]).
 -export([get_octet_from_file/2]).
 -export([copy_files_for_rset/2]).
 -export([get_file_path_by_num/2]).
@@ -173,3 +174,14 @@ get_head([]) ->
     [];
 get_head(List) ->
     lists:nth(1, List).
+
+%
+% Split mail addres by @
+%
+split_mail_address([]) ->
+    [];
+split_mail_address(MailAddress) ->
+    Add1 = string:strip(MailAddress, both, $<),
+    Add2 = string:strip(Add1, both, $>),
+    [_ | T] = string:tokens(Add2, "@"),
+    T.

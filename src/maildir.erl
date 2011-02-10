@@ -44,6 +44,7 @@ add_user(Domain, UserName, Password) ->
     Slash = utils:get_os1(),
     filelib:ensure_dir(Domain ++ UserName ++ Slash),
     filelib:ensure_dir(Domain ++ UserName ++ Slash ++ "new" ++ Slash),
+    filelib:ensure_dir(Domain ++ UserName ++ Slash ++ "tmp" ++ Slash),
 
     {ok, Config} = config:read(config),
     UserStorage = config:get_key(user_storage, Config),

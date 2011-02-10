@@ -27,7 +27,7 @@
 
 -record(state, {socket,
 		client,
-		rcpts = []
+		rcpt :: list()
 	        }).
 
 %%% API
@@ -59,7 +59,7 @@ autorization(Event, State) ->
 			if
 			    (length(Helo) == 1) ->
 				gen_tcp:send(State#state.socket, integer_to_list(250) ++ " " ++ SmtpServerName ++  "\r\n"),
-				mail_transaction(Event, State);
+				mail_transaction(Event, State#state{rcpt = []});
 			    true ->
 				autorization(Event, State)
 			end;  
@@ -78,7 +78,7 @@ autorization(Event, State) ->
 				gen_tcp:send(State#state.socket, "250-EPmail smtp server is pleased to meet you" ++  "\r\n"),
 				gen_tcp:send(State#state.socket, "250-HELP" ++ "\r\n"),
 				gen_tcp:send(State#state.socket, "250 EHLO" ++ "\r\n"),
-				mail_transaction(Event, State);
+				mail_transaction(Event, State#state{rcpt = []});
 			    true ->
 				autorization(Event, State)
 			end;  
@@ -98,7 +98,7 @@ autorization(Event, State) ->
 			autorization(Event, State);
 		    "rset" ->
 			gen_tcp:send(State#state.socket, "250 OK \r\n"),
-			autorization(Event, State#state{client = underfined, rcpts = []});
+			autorization(Event, State#state{client = underfined});
 		    _ ->
 			gen_tcp:send(State#state.socket, pop_messages:err_message()),
 			autorization(Event, State )
@@ -138,13 +138,11 @@ mail_transaction(Event, State) ->
 	    try
 		case smtp_messages:is_rcpt_message(ReParseData) of 
 		    { _ , Rcpt } ->
-			if
-			    (length(Rcpt) > 0) ->
-				gen_tcp:send(State#state.socket, "250 OK \r\n"),
-				mail_transaction(Event, State#state{rcpts = [ Rcpt | rcpts]});
-			    true ->
-				mail_transaction(Event, State)
-			end;  
+			%ListAddress = Rcpt,
+		        ListParse = lists:map(fun(X) -> utils:split_mail_address(X) end, Rcpt),
+			
+			gen_tcp:send(State#state.socket, "250 OK \r\n"),
+			mail_transaction(Event, State#state{rcpt = lists:append(ListParse, State#state.rcpt)});  
 		    error ->
 			error  
 		end
@@ -164,16 +162,16 @@ mail_transaction(Event, State) ->
 			gen_tcp:send(State#state.socket, "250 OK\r\n"),
 			
 			case gen_tcp:recv(State#state.socket, 0) of
-			    {ok, Packet} ->
-				Packet;
+			    {ok, _} ->
+				io:format(State#state.rcpt);
 			    {error, Reason} ->
 				io:format(Reason)
 			end,
 			    
-			autorization(Event, State#state{client = underfined, rcpts = []});
+			autorization(Event, State);
 		    "rset" ->
 			gen_tcp:send(State#state.socket, "250 OK \r\n"),
-			autorization(Event, State#state{client = underfined, rcpts = []});
+			autorization(Event, State#state{client = underfined});
 		    _ ->
 			gen_tcp:send(State#state.socket, pop_messages:err_message()),
 			mail_transaction(Event, State )
