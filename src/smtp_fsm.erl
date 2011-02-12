@@ -166,10 +166,8 @@ mail_transaction(Event, State) ->
 			    {ok, Packet} ->
 				{ok, Config} = config:read(config),
 				Domain = config:get_key(domain, Config),
-			       
 				SplitAddressList = [string:tokens(S, "@") || [S] <- utils:parse(Packet)],
-				
-				LocalList = lists:filter(fun(X) -> lists:last(X) == Domain end, SplitAddressList),
+				LocalList = [X || X <- SplitAddressList, Y <- Domain, lists:last(X)=:=Y],
 
 				%
 				% Send mail to local server
