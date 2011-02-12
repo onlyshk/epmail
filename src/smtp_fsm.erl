@@ -76,6 +76,7 @@ autorization(Event, State) ->
 			if
 			    (length(Ehlo) == 1) ->
 				gen_tcp:send(State#state.socket, "250-EPmail smtp server is pleased to meet you" ++  "\r\n"),
+				gen_tcp:send(State#state.socket, "250-VRFY" ++ "\r\n"),
 				gen_tcp:send(State#state.socket, "250-HELP" ++ "\r\n"),
 				gen_tcp:send(State#state.socket, "250 EHLO" ++ "\r\n"),
 				mail_transaction(Event, State#state{rcpt = []});
@@ -116,6 +117,22 @@ mail_transaction(Event, State) ->
     case gen_tcp:recv(State#state.socket, 0) of
 	{ok, Data} ->
 	    ReParseData = string:to_lower(utils:trim(Data)),
+
+	    try
+		case smtp_messages:is_vrfy_message(ReParseData) of
+		    {_, [VRFY]} ->
+			case dets:lookup(upDisk, VRFY) of
+			    [{Name,DomainName,_}] ->
+				gen_tcp:send(State#state.socket, "250 " ++ Name ++ "@" ++ DomainName ++ "\r\n"),
+				mail_transaction(Event, State);
+			    [] ->
+				mail_transaction(Event, State)
+			end;    
+		    error ->
+			error
+		end
+	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    end,
 
 	    %% MAIL FROM command
 	    try

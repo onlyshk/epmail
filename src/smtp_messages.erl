@@ -13,6 +13,7 @@
 -export([is_ehlo_message/1]).
 -export([is_mail_message/1]).
 -export([is_rcpt_message/1]).
+-export([is_vrfy_message/1]).
 
 %
 % HELO smtp message
@@ -117,6 +118,33 @@ is_rcpt_message(RcptMessage) ->
 	   error;
  
        "rcpt to" ->
+	   error;
+       
+       [] ->
+	   error;
+       
+       _ ->
+	   error
+   end.
+
+%
+% VRFY to smtp message
+% SMTP SEND: VRFY: NAME
+%
+is_vrfy_message([]) ->
+    error;
+is_vrfy_message(VrfyMessage) ->
+        [H | T] = string:tokens(VrfyMessage, " "),
+    case [H | T] of
+	["vrfy", _] ->
+	    {H, T};
+	        [_, _] ->
+	   error;
+      
+       [_] ->
+	   error;
+ 
+       "vrfy" ->
 	   error;
        
        [] ->
