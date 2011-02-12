@@ -158,17 +158,43 @@ mail_transaction(Event, State) ->
 			gen_tcp:send(State#state.socket, pop_messages:ok_message() ++ "\r\n"),
 			mail_transaction(Event, State);
 		    "data" ->
+			Slash = utils:get_os1(),
 			gen_tcp:send(State#state.socket, "354 Enter mail, end with . on a line by itself \r\n"),
 			gen_tcp:send(State#state.socket, "250 OK\r\n"),
 			
 			case gen_tcp:recv(State#state.socket, 0) of
-			    {ok, _} ->
-				io:format(State#state.rcpt);
+			    {ok, Packet} ->
+				{ok, Config} = config:read(config),
+				Domain = config:get_key(domain, Config),
+			       
+				SplitAddressList = [string:tokens(S, "@") || [S] <- utils:parse(Packet)],
+				
+				LocalList = lists:filter(fun(X) -> lists:last(X) == Domain end, SplitAddressList),
+
+				%
+				% Send mail to local server
+				% First of all check domain
+				% If domain name in config and domain from LocalList =:=
+				% Send mail  to local server
+				%
+				case LocalList of
+				    [] ->
+					[];
+				    _ ->
+				        lists:map(fun(X) ->
+							  {ok, WD} = file:open(lists:last(X) ++ Slash ++
+						          utils:get_head(X) ++ Slash ++ "new/" ++ float_to_list(random:uniform()), [raw, append]),
+					                  file:write(WD, Packet),
+					                  file:close(WD)
+							  end,
+						  LocalList)
+				end,
+				RemoteList = lists:filter(fun(X) -> lists:last(X) /= Domain end, SplitAddressList);
 			    {error, Reason} ->
 				io:format(Reason)
-			end,
+			end;
 			    
-			autorization(Event, State);
+			%autorization(Event, State);
 		    "rset" ->
 			gen_tcp:send(State#state.socket, "250 OK \r\n"),
 			autorization(Event, State#state{client = underfined});

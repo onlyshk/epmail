@@ -24,7 +24,7 @@
 {error_logger_path, logger}.
 
 %% Domain name local storage
-{domain, ["localhost"]}.
+{domain, "localhost"}.
 
 %% User storage dets || mnesia || ets
 {user_storage, dets}.

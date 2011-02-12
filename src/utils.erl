@@ -13,6 +13,7 @@
 -export([get_os/0]).
 -export([get_os1/0]).
 -export([get_head/1]).
+-export([get_tail/1]).
 -export([files_count/1]).
 -export([octets_summ/1]).
 -export([octets_count/1]).
@@ -24,6 +25,9 @@
 -export([get_octet_from_file/2]).
 -export([copy_files_for_rset/2]).
 -export([get_file_path_by_num/2]).
+
+-export([deepMap/2]).
+-export([parse/1]).
 
 -vsn('0.1').
 -author('kuleshovmail@gmail.com').
@@ -172,8 +176,16 @@ get_os1() ->
 %
 get_head([]) ->
     [];
-get_head(List) ->
-    lists:nth(1, List).
+get_head([H | _]) ->
+    H.
+
+%
+% -| Get tail of list
+%
+get_tail([]) ->
+    [];
+get_tail([_ | T]) ->
+    T.
 
 %
 % Split mail addres by @
@@ -185,3 +197,17 @@ split_mail_address(MailAddress) ->
     Add2 = string:strip(Add1, both, $>),
     [_ | T] = string:tokens(Add2, "@"),
     T.
+
+parse(Data) ->
+    List = string:tokens(Data, "\r\n"),
+    Sep1 = lists:map(fun(H) ->string:tokens(H, ": ") end, List),
+    Sep2 = lists:filter(fun(Y) -> (lists:nth(1,Y) == "To") end , Sep1),
+    ListAddress = lists:append(Sep2),
+    [_ | Tail] = ListAddress,
+    lists:map(fun(Address) -> string:tokens(Address, ",") end, Tail).
+
+deepMap(Fun, T) ->
+  case is_list(T) of
+    true -> lists:map(fun(E) -> deepMap(Fun,E) end, T);
+    false -> Fun(T)
+  end.
