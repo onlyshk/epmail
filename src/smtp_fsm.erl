@@ -184,8 +184,10 @@ mail_transaction(Event, State) ->
 				{ok, Config} = config:read(config),
 				Domain = config:get_key(domain, Config),
 				SplitAddressList = [string:tokens(S, "@") || [S] <- utils:parse(Packet)],
+				
 				LocalList = [X || X <- SplitAddressList, Y <- Domain, lists:last(X)=:=Y],
-
+				RemoteList =  [X || X <- SplitAddressList, Y <- Domain, lists:last(X)/=Y],
+			
 				%
 				% Send mail to local server
 				% First of all check domain
@@ -204,9 +206,22 @@ mail_transaction(Event, State) ->
 							  end,
 						  LocalList)
 				end,
-				RemoteList = lists:filter(fun(X) -> lists:last(X) /= Domain end, SplitAddressList);
-			    {error, Reason} ->
-				io:format(Reason)
+
+				case RemoteList of
+				    [] ->
+					[];
+				    _ ->
+					MX = lists:map(fun(X) ->
+							  utils:get_mx(lists:last(X))
+						  end,
+						  RemoteList),
+					
+					MxAddresses = lists:map(fun(X) ->
+									{_, Last} = lists:nth(1, X),
+									Last
+								end,
+						      MX)
+				end
 			end;
 			    
 			%autorization(Event, State);

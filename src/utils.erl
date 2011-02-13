@@ -26,8 +26,10 @@
 -export([copy_files_for_rset/2]).
 -export([get_file_path_by_num/2]).
 
--export([deepMap/2]).
+-export([get_mx/1]).
 -export([parse/1]).
+
+-include_lib("kernel/src/inet_dns.hrl").
 
 -vsn('0.1').
 -author('kuleshovmail@gmail.com').
@@ -206,8 +208,10 @@ parse(Data) ->
     [_ | Tail] = ListAddress,
     lists:map(fun(Address) -> string:tokens(Address, ",") end, Tail).
 
-deepMap(Fun, T) ->
-  case is_list(T) of
-    true -> lists:map(fun(E) -> deepMap(Fun,E) end, T);
-    false -> Fun(T)
-  end.
+%
+% get mx record
+%
+get_mx(Domain) ->
+    {ok, {hostent, Domain, _, _, _Len, List}} = inet_res:getbyname(Domain, mx),
+    List.
+
