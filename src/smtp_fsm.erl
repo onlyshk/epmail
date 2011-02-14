@@ -155,7 +155,6 @@ mail_transaction(Event, State) ->
 	    try
 		case smtp_messages:is_rcpt_message(ReParseData) of 
 		    { _ , Rcpt } ->
-			%ListAddress = Rcpt,
 		        ListParse = lists:map(fun(X) -> utils:split_mail_address(X) end, Rcpt),
 			
 			gen_tcp:send(State#state.socket, "250 OK \r\n"),
@@ -183,11 +182,12 @@ mail_transaction(Event, State) ->
 			    {ok, Packet} ->
 				{ok, Config} = config:read(config),
 				Domain = config:get_key(domain, Config),
+
 				SplitAddressList = [string:tokens(S, "@") || [S] <- utils:parse(Packet)],
-				
-				LocalList = [X || X <- SplitAddressList, Y <- Domain, lists:last(X)=:=Y],
-				RemoteList =  [X || X <- SplitAddressList, Y <- Domain, lists:last(X)/=Y],
-			
+
+				LocalList = [X || X <- SplitAddressList, Y <- Domain,   lists:last(X) == Y],
+			        RemoteList =  [X || X <- SplitAddressList, Y <- Domain, lists:last(X) /= Y],
+
 				%
 				% Send mail to local server
 				% First of all check domain
@@ -196,35 +196,43 @@ mail_transaction(Event, State) ->
 				%
 				case LocalList of
 				    [] ->
-					[];
+				    	[];
 				    _ ->
+					% TODO
+					% Need normal randmo generator
+				        {H, M, S} = time(),
+					{Y, Mt,D} = date(),
+					Summ = H + M + S + Y + Mt + D,
+				    
 				        lists:map(fun(X) ->
 							  {ok, WD} = file:open(lists:last(X) ++ Slash ++
-						          utils:get_head(X) ++ Slash ++ "new/" ++ float_to_list(random:uniform()), [raw, append]),
+						          utils:get_head(X) ++ Slash ++ "new/" ++ integer_to_list(Summ),
+									       [raw, append]),
 					                  file:write(WD, Packet),
 					                  file:close(WD)
 							  end,
 						  LocalList)
 				end,
-
+								
 				case RemoteList of
 				    [] ->
-					[];
+				 	[];
 				    _ ->
-					MX = lists:map(fun(X) ->
-							  utils:get_mx(lists:last(X))
-						  end,
-						  RemoteList),
-					
+				 	MX = lists:map(fun(X) ->
+							       io:format(lists:last(X)),
+							       utils:get_mx(lists:last(X))
+						       end,
+						       RemoteList),
+	
 					MxAddresses = lists:map(fun(X) ->
 									{_, Last} = lists:nth(1, X),
 									Last
 								end,
-						      MX)
+								MX)
 				end
-			end;
-			    
-			%autorization(Event, State);
+			end,
+			
+		        autorization(Event, State);
 		    "rset" ->
 			gen_tcp:send(State#state.socket, "250 OK \r\n"),
 			autorization(Event, State#state{client = underfined});

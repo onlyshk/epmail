@@ -21,6 +21,7 @@
 -export([get_os_for_tmp/0]).
 -export([trim_whitespace/1]).
 -export([delete_messages/2]).
+-export([get_random_string/2]).
 -export([split_mail_address/1]).
 -export([get_octet_from_file/2]).
 -export([copy_files_for_rset/2]).
@@ -215,3 +216,12 @@ get_mx(Domain) ->
     {ok, {hostent, Domain, _, _, _Len, List}} = inet_res:getbyname(Domain, mx),
     List.
 
+%
+% Generate random string
+%
+get_random_string(Length, AllowedChars) ->
+    lists:foldl(fun(_, Acc) ->
+                        [lists:nth(random:uniform(length(AllowedChars)),
+                                   AllowedChars)]
+                            ++ Acc
+                end, [], lists:seq(1, Length)).
