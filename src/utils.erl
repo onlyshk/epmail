@@ -28,7 +28,7 @@
 -export([get_file_path_by_num/2]).
 
 -export([get_mx/1]).
--export([parse/1]).
+-export([parse_to/1]).
 
 -include_lib("kernel/src/inet_dns.hrl").
 
@@ -201,7 +201,7 @@ split_mail_address(MailAddress) ->
     [_ | T] = string:tokens(Add2, "@"),
     T.
 
-parse(Data) ->
+parse_to(Data) ->
     List = string:tokens(Data, "\r\n"),
     Sep1 = lists:map(fun(H) ->string:tokens(H, ": ") end, List),
     Sep2 = lists:filter(fun(Y) -> (lists:nth(1,Y) == "To") end , Sep1),
