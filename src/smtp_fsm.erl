@@ -247,7 +247,7 @@ mail_transaction(Event, State) ->
 									      {ok, Ehlo} ->
 										  io:format(Ehlo),
 										  gen_tcp:send(Socket,
-											       "mail from: " ++ "shk@kuleshov.no-ip.org" ++ "\r\n"),
+											       "mail from: " ++ State#state.client ++ "\r\n"),
 										  case gen_tcp:recv(Socket, 0) of
 										      {ok, MailFrom} ->
 											  io:format(MailFrom),
