@@ -11,7 +11,7 @@
 
 -behaviour(supervisor).
 
--vsn('0.1').
+-vsn('0.2').
 -author('kuleshovmail@gmail.com').
 
 %% API
@@ -31,7 +31,9 @@ init([]) ->
 
     {ok, Config} = config:read(config),
     UserStorage = config:get_key(user_storage, Config),
-
+    Pop3ServerStart = config:get_key(pop3_server_start, Config),
+    SmtpServerStart = config:get_key(smtp_server_start, Config),
+    
     case UserStorage of
 	mnesia ->
 	    mnesia:create_schema([node()]),
@@ -50,9 +52,15 @@ init([]) ->
     SmtpListenerSup = {smtpd_listener_sup,
 		      {smtpd_listener_sup, start_link, []},
 		      permanent, 2000, supervisor, [smtpd_listener_sup]},
-   
-    Children = [ListenerSup, SmtpListenerSup],
-
+    if
+	(Pop3ServerStart == start) and (SmtpServerStart == start) ->
+	    Children = [ListenerSup, SmtpListenerSup];
+	(Pop3ServerStart == start) and (SmtpServerStart /= start) ->
+	    Children = [ListenerSup];
+	(Pop3ServerStart /= start) and (SmtpServerStart == start) ->
+	    Children = [SmtpServerStart]
+    end,
+	
     {ok, {RestartStrategy, Children}}.
 
     

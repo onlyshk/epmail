@@ -12,8 +12,8 @@
 -export([get_key/2]).
 -export([read/1]).
 
+-vsn('0.2').
 -author('kuleshovmail@gmail.com').
--vsn('0.1').
 
 get_key(_Key, []) ->
   {error, not_found};

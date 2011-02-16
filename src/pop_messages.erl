@@ -17,7 +17,7 @@
 -export([is_message_retr/1]).
 -export([is_message_dele/1]).
 
--vsn('0.1').
+-vsn('0.2').
 -author('kuleshovmail@gmail.com').
 
 err_message() ->

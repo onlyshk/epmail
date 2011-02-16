@@ -11,8 +11,10 @@
 
 -behaviour(gen_fsm).
 
--vsn('0.1').
+-vsn('0.2').
 -author('kuleshovmail@gmail.com').
+
+-include_lib("../include/smtp.hrl").
 
 %% API
 -export([stop/0]).
@@ -24,11 +26,6 @@
 	 handle_sync_event/4, handle_info/3, terminate/3, code_change/4]).
 
 -define(SERVER, ?MODULE).
-
--record(state, {socket,
-		client,
-		rcpt :: list()
-	       }).
 
 %%% API
 start_link(Socket, Client) ->

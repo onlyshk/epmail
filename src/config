@@ -14,17 +14,17 @@
 %% POP3 port
 {pop3_port, 110}.
 
-%% Smtp server start true | false
-{smtp_server_start, false}.
+%% Smtp server start: start | not_start
+{smtp_server_start, start}.
 
-%% POP3 server start true | false
-{pop3_server_start, false}.
+%% POP3 server start: start | not_start
+{pop3_server_start, start}.
 
 %% Error logger path
 {error_logger_path, logger}.
 
 %% Domain name local storage
-{domain, ["kuleshov.no-ip.org"]}.
+{domain, ["localhost"]}.
 
 %% User storage dets || mnesia || ets
 {user_storage, dets}.

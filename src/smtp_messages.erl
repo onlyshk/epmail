@@ -15,6 +15,9 @@
 -export([is_rcpt_message/1]).
 -export([is_vrfy_message/1]).
 
+-vsn('0.2').
+-author('kuleshovmail@gmail.com').
+
 %
 % HELO smtp message
 % SMTP SEND: HELO (for supporting old message)

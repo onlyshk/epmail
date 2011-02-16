@@ -15,7 +15,7 @@
 -export([init/1, stop/0]).
 -export([start_child/2]).
 
--vsn('0.1').
+-vsn('0.2').
 -author('kuleshovmail@gmail.com').
 
 start_link() ->

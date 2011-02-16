@@ -16,7 +16,7 @@
 -export([check_pass/2]).
 -export([find_domain/1]).
 
--vsn('0.1').
+-vsn('0.2').
 -author('kuleshovmail@gmail.com').
 
 -record(users, {username,

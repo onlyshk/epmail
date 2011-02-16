@@ -32,7 +32,7 @@
 
 -include_lib("kernel/src/inet_dns.hrl").
 
--vsn('0.1').
+-vsn('0.2').
 -author('kuleshovmail@gmail.com').
 
 %

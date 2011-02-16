@@ -9,7 +9,7 @@
 
 -module(mime).
 
--vsn('0.1').
+-vsn('0.2').
 -author('kuleshovmail@gmail.com').
 
 mime_version_header() ->

@@ -11,7 +11,7 @@
 
 -behaviour(supervisor).
 
--vsn('0.1').
+-vsn('0.2').
 -author('kuleshovmail@gmail.com').
 
 %% API
