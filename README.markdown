@@ -46,7 +46,7 @@ You can connect to servers by telnet or you can use mail client, thunderbird for
   EPmail wiki - <https://github.com/onlyshk/epmail/wiki>
  
 ## EPmail TODO and Issues
-  EPmail issues - [EPmail issues]: https://github.com/onlyshk/epmail/issues issues
+  EPmail issues - <https://github.com/onlyshk/epmail/issues>
 
 ## More info
   More info - kuleshovmail@gmail.com
