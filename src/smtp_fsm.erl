@@ -200,9 +200,10 @@ mail_transaction(Event, State) ->
 				    _ ->
 					% TODO
 					% Need normal randmo generator
-				        {H, M, S} = time(),
-					{Y, Mt,D} = date(),
-					Summ = H + M + S + Y + Mt + D,
+					
+				        {H, M, S} = random:seed(erlang:now()),
+					
+					Summ = H + M + S,
 				    
 				        lists:map(fun(X) ->
 							  {ok, WD} = file:open(lists:last(X) ++ Slash ++
