@@ -45,7 +45,10 @@ init([Socket, UserName, Password]) ->
     {ok, autorization, #state{socket = Socket, username = UserName, password = Password}}.
 
 autorization(Event, State) ->
-    case gen_tcp:recv(State#state.socket, 0) of
+    {ok, Config} = config:read(config),
+    Timeout = config:get_key(pop3_timeout, Config),
+    
+    case gen_tcp:recv(State#state.socket, 0, Timeout) of
 	{ok, Data} ->
 	    ReParseData = string:to_lower(utils:trim(Data)),
 	        	        	        
