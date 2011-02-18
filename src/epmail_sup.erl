@@ -15,7 +15,7 @@
 -author('kuleshovmail@gmail.com').
 
 %% API
--export([start_link/0]).
+-export([start_link/1]).
 -export([stop/0]).
 
 %% Supervisor callbacks
@@ -24,11 +24,10 @@
 -define(SERVER, ?MODULE).
 
 %%% API functions
-start_link() ->
+start_link(StartArgs) ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 init([]) ->
-
     {ok, Config} = config:read(config),
     UserStorage = config:get_key(user_storage, Config),
     Pop3ServerStart = config:get_key(pop3_server_start, Config),
