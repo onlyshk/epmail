@@ -44,10 +44,7 @@ set_socket(Pid) ->
 init([Socket, UserName, Password]) ->
     {ok, autorization, #state{socket = Socket, username = UserName, password = Password}}.
 
-autorization(Event, State) ->
-    {ok, Config} = config:read(config),
-    Timeout = config:get_key(pop3_timeout, Config),
-    
+autorization(Event, State) ->    
     case gen_tcp:recv(State#state.socket, 0) of
 	{ok, Data} ->
 	    ReParseData = string:to_lower(utils:trim(Data)),

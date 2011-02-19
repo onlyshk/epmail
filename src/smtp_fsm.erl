@@ -41,11 +41,8 @@ set_socket(Pid) ->
 init([Socket, Client]) ->
     {ok, autorization, #state{socket = Socket, client = Client}}.
 
-autorization(Event, State) ->
-    {ok, Config} = config:read(config),
-    Timeout = config:get_key(smtp_timeout, Config),
-    
-    case gen_tcp:recv(State#state.socket, 0, Timeout) of
+autorization(Event, State) ->    
+    case gen_tcp:recv(State#state.socket, 0) of
 	{ok, Data} ->
 	    ReParseData = string:to_lower(utils:trim(Data)),
 

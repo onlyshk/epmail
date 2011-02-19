@@ -28,9 +28,3 @@
 
 %% User storage dets || mnesia || ets
 {user_storage, dets}.
-
-%% POP3 server timout in miliseconds
-{pop3_timeout, 5000}.
-
-%% smtp server timout in miliseconds
-{smtp_timeout, 5000}.
