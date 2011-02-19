@@ -187,7 +187,7 @@ mail_transaction(Event, State) ->
 
 				LocalList = [X || X <- SplitAddressList, Y <- Domain,   lists:last(X) == Y],
 			        RemoteList =  [X || X <- SplitAddressList, Y <- Domain, lists:last(X) /= Y],
-
+			
 				%
 				% Send mail to local server
 				% First of all check domain
@@ -199,12 +199,10 @@ mail_transaction(Event, State) ->
 				    	[];
 				    _ ->
 					% TODO
-					% Need normal randmo generator
+					% Need normal random generator
+					{H, M, S} = now(),
+				        Summ = random:uniform(H + M + S),
 					
-				        {H, M, S} = random:seed(erlang:now()),
-					
-					Summ = H + M + S,
-				    
 				        lists:map(fun(X) ->
 							  {ok, WD} = file:open(lists:last(X) ++ Slash ++
 						          utils:get_head(X) ++ Slash ++ "new/" ++ integer_to_list(Summ),
