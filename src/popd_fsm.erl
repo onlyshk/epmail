@@ -107,10 +107,10 @@ autorization(Event, State) ->
 			gen_tcp:close(State#state.socket);
 		    "noop" ->
 			gen_tcp:send(State#state.socket, pop_messages:ok_message() ++ "\r\n"),
-			autorization(Event, State#state{username = [], password = []});
+			autorization(Event, State);
 		    _ ->
 			gen_tcp:send(State#state.socket, pop_messages:err_message()),
-			autorization(Event, State )
+			autorization(Event, State)
 		end
 	    catch _:_ -> gen_tcp:close(State#state.socket)
 	    end;
@@ -204,7 +204,7 @@ transaction(Event, State) ->
 		      gen_tcp:close(State#state.socket);
 		    "noop" ->
 		      gen_tcp:send(State#state.socket, pop_messages:ok_message() ++ "\r\n"),
-		      autorization(Event, State#state{username = [], password = []});
+		      transaction(Event, State);
 		    "stat" ->
 		       DomainForSTAT = maildir:find_domain(lists:concat(State#state.username)),
 		       MessageCount = utils:files_count(DomainForSTAT ++ State#state.username ++ NewDir),
