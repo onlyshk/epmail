@@ -22,7 +22,7 @@
 -export([start_link/2]).
 
 %% gen_fsm callbacks
--export([init/1, autorization/2, mail_transaction/2, state_name/3, handle_event/3,
+-export([init/1, autorization/2, mail_transaction/2, recv_rcpt_transaction/2, state_name/3, handle_event/3,
 	 handle_sync_event/4, handle_info/3, terminate/3, code_change/4]).
 
 -define(SERVER, ?MODULE).
@@ -138,24 +138,10 @@ mail_transaction(Event, State) ->
 			if
 			    (length(Mail) > 0) ->
 				gen_tcp:send(State#state.socket, "250 OK \r\n"),
-				mail_transaction(Event, State#state{client = Mail});
+				recv_rcpt_transaction(Event, State#state{client = Mail});
 			    true ->
 				mail_transaction(Event, State)
 			end;  
-		    error ->
-			error  
-		end
-	    catch _:_ -> gen_tcp:close(State#state.socket)
-	    end,
-
-	    %% RCPT TO: command
-	    try
-		case smtp_messages:is_rcpt_message(ReParseData) of 
-		    { _ , Rcpt } ->
-		        ListParse = lists:map(fun(X) -> utils:split_mail_address(X) end, Rcpt),
-			
-			gen_tcp:send(State#state.socket, "250 OK \r\n"),
-			mail_transaction(Event, State#state{rcpt = lists:append(ListParse, State#state.rcpt)});  
 		    error ->
 			error  
 		end
@@ -170,6 +156,46 @@ mail_transaction(Event, State) ->
 		    "noop" ->
 			gen_tcp:send(State#state.socket, pop_messages:ok_message() ++ "\r\n"),
 			mail_transaction(Event, State);
+		    "rset" ->
+			gen_tcp:send(State#state.socket, "250 OK \r\n"),
+			mail_transaction(Event, State#state{client = underfined})
+		    end
+	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    end;
+	{error, closed} ->
+	    ok
+    end,
+    {next_state, mail_transaction, State}.
+
+%
+% RCPT and DATA transaction
+%
+recv_rcpt_transaction(Event, State) ->
+    case gen_tcp:recv(State#state.socket, 0) of
+	{ok, Data} ->
+	    ReParseData = string:to_lower(utils:trim(Data)),
+
+	    %% RCPT TO: command
+	    try
+		case smtp_messages:is_rcpt_message(ReParseData) of 
+		    { _ , Rcpt } ->
+		        ListParse = lists:map(fun(X) -> utils:split_mail_address(X) end, Rcpt),
+			gen_tcp:send(State#state.socket, "250 OK \r\n"),
+			recv_rcpt_transaction(Event, State#state{rcpt = lists:append(ListParse, State#state.rcpt)});  
+		    error ->
+			error  
+		end
+	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    end,
+
+	    try
+		case ReParseData of
+		    "quit" ->
+			gen_tcp:send(State#state.socket, "221 EPmail Service closing transmission channel" ++ "\r\n"),
+			gen_tcp:close(State#state.socket);
+		    "noop" ->
+			gen_tcp:send(State#state.socket, pop_messages:ok_message() ++ "\r\n"),
+			recv_rcpt_transaction(Event, State);
 		    "data" ->
 			Slash = utils:get_os1(),
 			gen_tcp:send(State#state.socket, "354 Enter mail, end with . on a line by itself \r\n"),
@@ -300,11 +326,13 @@ mail_transaction(Event, State) ->
 		end
 	    catch _:_ -> gen_tcp:close(State#state.socket)
 	    end;
-	    
-	{error, closed} ->
+
+	
+	{error,closed} ->
 	    ok
-    end,
+    end, 
     {next_state, mail_transaction, State}.
+    
 
 state_name(_Event, _From, State) ->
     Reply = ok,

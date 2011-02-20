@@ -130,6 +130,7 @@ loop_for_list(State, FileCount)  ->
 
 transaction(Event, State) ->
     NewDir = utils:get_os(),
+    
     case gen_tcp:recv(State#state.socket, 0) of
 	{ok, Data} ->
 	    ReParseData = string:to_lower(utils:trim(Data)),
