@@ -138,10 +138,18 @@ transaction(Event, State) ->
 	    try
 		case pop_messages:is_message_list(ReParseData) of
 		    { _ , [H | _] } ->
-			Octets = utils:get_octet_from_file(Domain ++ State#state.username ++ NewDir, list_to_integer(H)),
-			gen_tcp:send(State#state.socket, "+OK " ++ H ++ " " ++ integer_to_list(Octets) ++ "\r\n"),
-			gen_tcp:send(State#state.socket, ".\r\n"),
-			transaction(Event, State);
+			FileCount = utils:files_count(Domain ++ State#state.username ++ NewDir),
+			MessageNum = list_to_integer(H),
+			if
+			    ((MessageNum == 0) or (MessageNum > FileCount))->
+				gen_tcp:send(State#state.socket, "-ERR \r\n"),
+				transaction(Event, State); 
+			    true ->
+				Octets = utils:get_octet_from_file(Domain ++ State#state.username ++ NewDir, list_to_integer(H)),
+				gen_tcp:send(State#state.socket, "+OK " ++ H ++ " " ++ integer_to_list(Octets) ++ "\r\n"),
+				gen_tcp:send(State#state.socket, ".\r\n"),
+				transaction(Event, State)
+			    end;
 		    {_} ->
 			%% +OK 2 messages (320 octets)
 			%% 1 120
