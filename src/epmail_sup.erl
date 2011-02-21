@@ -38,8 +38,14 @@ init([]) ->
 	    mnesia:create_schema([node()]),
 	    mnesia:start(),
 	    mnesia:create_table(users, []);
-	_ ->
-	    dets
+	dets ->
+	    dets;
+	ets ->
+	    ets;
+	sqlite3 ->
+	    sqlite3:open(user_db, [in_memory]),
+	    TableInfo = [{user, text, [not_null]}, {password, text, [not_null]}, {domain, text, [not_null]}],
+	    ok = sqlite3:create_table(user_db, users, TableInfo)
     end,
     
     RestartStrategy = {one_for_one, 5, 600},

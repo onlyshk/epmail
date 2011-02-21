@@ -78,7 +78,6 @@ autorization(Event, State) ->
 				gen_tcp:send(State#state.socket, pop_messages:err_message()),
 				autorization(Event, State#state{username = [], password = []});
 			    true ->
-				
 				if
 				    (length(Pass) == 1) ->
 					case maildir:check_pass(lists:concat(State#state.username), lists:concat(Pass)) of

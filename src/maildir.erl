@@ -56,7 +56,9 @@ add_user(Domain, UserName, Password) ->
 	dets ->
 	    dets:insert(upDisk, {UserName, Domain , Password});
 	ets ->
-	    ets:insert(usersTable, {UserName, Domain, Password})
+	    ets:insert(usersTable, {UserName, Domain, Password});
+	sqlite3 ->
+	    sqlite3:write(user_db, users, [{user, UserName}, {domain, Domain}, {password, Password}])
     end.
 
 %
@@ -72,7 +74,9 @@ delete_user(UserName) ->
 	dets ->
 	    dets:delete(upDisk, {UserName, '_', '_'});
 	ets ->
-	    ets:delete(usersTable, {UserName, '_', '_'})
+	    ets:delete(usersTable, {UserName, '_', '_'});
+	sqlite3 ->
+	    sqlite3:delete(user_db, users, {user, UserName})
     end.
 %
 % Find domain by User Name
@@ -90,7 +94,12 @@ find_domain(UserName) ->
 	    Domain;
 	ets ->
 	    [{_, Domain, _}] = ets:lookup(usersTable, UserName),
-	    Domain
+	    Domain;
+	sqlite3 ->
+	    [_, T] = sqlite3:sql_exec(user_db, "SELECT domain FROM users WHERE user = ?", [{1, UserName}]),
+	    {rows, Domain_in_tupple} = T,
+	    [{Domain_in_bin}] = Domain_in_tupple,
+	    binary_to_list(Domain_in_bin)
     end.
 
 %
@@ -109,7 +118,9 @@ create_key_value_user_pass_db(UsersPath) ->
 		    Reason
 	    end;
 	ets ->
-	    ets:new(usersTable, [bag]);  
+	    ets:new(usersTable, [bag]);
+	sqlite3 ->
+	    sqlite3;
 	_ ->
 	    error
     end.
@@ -125,7 +136,9 @@ destroy() ->
 	dets ->
 	    dets:close(upDisk);
 	ets ->
-	    ets:delete(usersTab)
+	    ets:delete(usersTab);
+	sqlite3 ->
+	    sqlite3:close(user_db)
     end.
 
 %
