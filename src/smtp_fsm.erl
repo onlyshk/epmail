@@ -197,7 +197,6 @@ recv_rcpt_transaction(Event, State) ->
 			gen_tcp:send(State#state.socket, pop_messages:ok_message() ++ "\r\n"),
 			recv_rcpt_transaction(Event, State);
 		    "data" ->
-			Slash = utils:get_os1(),
 			gen_tcp:send(State#state.socket, "354 Enter mail, end with . on a line by itself \r\n"),
 			gen_tcp:send(State#state.socket, "250 OK\r\n"),
 			
@@ -230,8 +229,8 @@ recv_rcpt_transaction(Event, State) ->
 				        Summ = random:uniform(H + M + S),
 					
 				        lists:map(fun(X) ->
-							  {ok, WD} = file:open(lists:last(X) ++ Slash ++
-						          utils:get_head(X) ++ Slash ++ "new/" ++ integer_to_list(Summ),
+							  {ok, WD} = file:open(lists:last(X) ++ "/" ++
+						          utils:get_head(X) ++ "/new/" ++ integer_to_list(Summ),
 									       [raw, append]),
 					                  file:write(WD, Packet),
 					                  file:close(WD)

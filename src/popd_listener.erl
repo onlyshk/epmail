@@ -42,7 +42,7 @@ accept(Socket) ->
 	{ok, Sock} ->
 	     {ok, Pid} = pop_fsm_sup:start_child(Sock, [], []),
 	     popd_fsm:set_socket(Pid),
-             gen_tcp:send(Sock, "+OK POP3 server ready \r\n"),
+            gen_tcp:send(Sock, "+OK POP3 server ready \r\n"),
   	     accept(Socket);
 	{error, Reason} ->
 	    Reason
@@ -58,7 +58,7 @@ stop() ->
 init([]) ->
     process_flag(trap_exit, true),
     {ok, Config} = config:read(config),
-
+ 
     Port = config:get_key(pop3_port, Config),
     
     Opts = [list, {reuseaddr, true}, 
