@@ -170,7 +170,7 @@ mail_transaction(Event, State) ->
 %
 % RCPT and DATA transaction
 %
-recv_rcpt_transaction(Event, State) ->
+recv_rcpt_transaction(Event, State) ->    
     case gen_tcp:recv(State#state.socket, 0) of
 	{ok, Data} ->
 	    ReParseData = string:to_lower(utils:trim(Data)),
@@ -198,47 +198,45 @@ recv_rcpt_transaction(Event, State) ->
 			recv_rcpt_transaction(Event, State);
 		    "data" ->
 			gen_tcp:send(State#state.socket, "354 Enter mail, end with . on a line by itself \r\n"),
-			gen_tcp:send(State#state.socket, "250 OK\r\n"),
 			
-			case gen_tcp:recv(State#state.socket, 0) of
-			    {ok, Packet} ->
-				{ok, Config} = config:read(config),
-				
-				Domain = config:get_key(domain, Config),
-				Port   = config:get_key(smtp_port, Config),
-				SmtpServerName = config:get_key(smtp_server_name, Config),
+			{ok, Packet} = do_recv(State#state.socket, []),
+		
+		        {ok, Config} = config:read(config),
+			Domain = config:get_key(domain, Config),
+			Port   = config:get_key(smtp_port, Config),
+			SmtpServerName = config:get_key(smtp_server_name, Config),
 
-				SplitAddressList = [string:tokens(S, "@") || [S] <- utils:parse_to(Packet)],
+			SplitAddressList = [string:tokens(S, "@") || [S] <- utils:parse_to(Packet)],
 
-				LocalList = [X || X <- SplitAddressList, Y <- Domain,   lists:last(X) == Y],
-			        RemoteList =  [X || X <- SplitAddressList, Y <- Domain, lists:last(X) /= Y],
+			LocalList = [X || X <- SplitAddressList, Y <- Domain,   lists:last(X) == Y],
+			RemoteList =  [X || X <- SplitAddressList, Y <- Domain, lists:last(X) /= Y],
 			
-				%
-				% Send mail to local server
-				% First of all check domain
-				% If domain name in config and domain from LocalList =:=
-				% Send mail  to local server
-				%
-				case LocalList of
-				    [] ->
-				    	[];
-				    _ ->
-					% TODO
-					% Need normal random generator
-					{H, M, S} = now(),
-				        Summ = random:uniform(H + M + S),
-					
-				        lists:map(fun(X) ->
-							  {ok, WD} = file:open(lists:last(X) ++ "/" ++
-						          utils:get_head(X) ++ "/new/" ++ integer_to_list(Summ),
-									       [raw, append]),
-					                  file:write(WD, Packet),
-					                  file:close(WD)
-							  end,
-						  LocalList)
-				end,
-								
-				case RemoteList of
+			%
+			% Send mail to local server
+			% First of all check domain
+			% If domain name in config and domain from LocalList =:=
+			% Send mail  to local server
+			%
+			case LocalList of
+			    [] ->
+				[];
+			    _ ->
+				% TODO
+				% Need normal random generator
+				{H, M, S} = now(),
+				Summ = random:uniform(H + M + S),
+			
+				lists:map(fun(X) ->
+						  {ok, WD} = file:open(lists:last(X) ++ "/" ++
+									   string:tokens(utils:get_head(X), " ") ++ "/new/" ++ integer_to_list(Summ),
+								       [raw, append]),
+						  file:write(WD, Packet),
+						  file:close(WD)
+					  end,
+					  LocalList)
+			end,
+
+			case RemoteList of
 				    [] ->
 				 	[];
 				    _ ->
@@ -246,17 +244,17 @@ recv_rcpt_transaction(Event, State) ->
 							       utils:get_mx(lists:last(X))
 						       end,
 						       RemoteList),
-	
+
 					MxAddresses = lists:map(fun(X) ->
 									{_, Last} = lists:nth(1, X),
 									Last
 								end,
 								MX),
-					
+
 					Opts = [list, {reuseaddr, true}, 
 						{keepalive, false}, {ip,{0,0,0,0}}, {active, false}],
 
-					
+
 					lists:map(fun(MxAd) ->
 							  case gen_tcp:connect(MxAd, Port, Opts) of
 							      {ok, Socket} ->
@@ -267,6 +265,7 @@ recv_rcpt_transaction(Event, State) ->
 									  case gen_tcp:recv(Socket, 0) of
 									      {ok, Ehlo} ->
 										  io:format(Ehlo),
+										  io:format(State#state.client),
 										  gen_tcp:send(Socket,
 											       "mail from: " ++ State#state.client ++ "\r\n"),
 										  case gen_tcp:recv(Socket, 0) of
@@ -312,10 +311,7 @@ recv_rcpt_transaction(Event, State) ->
 							  end
 						  end,
 						  MxAddresses)	    
-				end
-			end,
-			
-		        autorization(Event, State);
+			end;
 		    "rset" ->
 			gen_tcp:send(State#state.socket, "250 OK \r\n"),
 			autorization(Event, State#state{client = underfined});
@@ -331,7 +327,30 @@ recv_rcpt_transaction(Event, State) ->
 	    ok
     end, 
     {next_state, mail_transaction, State}.
-    
+
+do_recv(Sock, Bs) ->
+    case gen_tcp:recv(Sock, 0) of
+        {ok, B} ->
+	    S = string:tokens(B, "\r\n"),
+	    case lists:last(S) of
+		"." ->
+		    gen_tcp:send(Sock, "250 OK\r\n"),
+		    case gen_tcp:recv(Sock, 0) of
+			{ok, Packet} ->
+			    case Packet of
+				"QUIT\r\n" ->
+				    gen_tcp:send(Sock, "221 foo.com Service closing transmission channel\r\n"),
+				    {ok, B}
+			    end
+		    end;
+
+		_ ->
+		    other
+	    end,
+	    do_recv(Sock, [Bs | B]);
+        {error, closed} ->
+	    {ok, Bs}
+    end.
 
 state_name(_Event, _From, State) ->
     Reply = ok,

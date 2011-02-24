@@ -160,8 +160,8 @@ split_mail_address(MailAddress) ->
 
 parse_to(Data) ->
     List = string:tokens(Data, "\r\n"),
-    Sep1 = lists:map(fun(H) ->string:tokens(H, ": ") end, List),
-    Sep2 = lists:filter(fun(Y) -> (lists:nth(1,Y) == "To") end , Sep1),
+    Sep1 = lists:map(fun(H) ->string:tokens(H, ":") end, List),
+    Sep2 = lists:filter(fun ([K | _]) -> K =:= "To" end, Sep1),
     ListAddress = lists:append(Sep2),
     [_ | Tail] = ListAddress,
     lists:map(fun(Address) -> string:tokens(Address, ",") end, Tail).

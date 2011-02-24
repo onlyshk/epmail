@@ -66,7 +66,7 @@ init([]) ->
 
     Port = config:get_key(smtp_port, Config),
     
-    Opts = [list, {reuseaddr, true}, 
+    Opts = [list, {reuseaddr, true}, {packet,0}, 
             {keepalive, false}, {ip,{0,0,0,0}}, {active, false}],
         
     case gen_tcp:listen(Port, Opts) of
