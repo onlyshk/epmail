@@ -19,6 +19,7 @@
 -export([trim_whitespace/1]).
 -export([delete_messages/2]).
 -export([get_random_string/2]).
+-export([get_file_name_by_num/2]).
 -export([split_mail_address/1]).
 -export([get_octet_from_file/2]).
 -export([copy_files_for_rset/2]).
@@ -91,6 +92,13 @@ get_list_octets(Dir) ->
 get_octet_from_file(Dir, Mail) ->
     MessageList = get_list_octets(Dir),
     lists:nth(Mail, MessageList).
+
+%
+% Get file name from dir by num
+%
+get_file_name_by_num(Dir, Num) ->
+    {ok, MessageList} = file:list_dir(Dir),
+    lists:nth(Num, MessageList).
 
 %
 % Get file path by num from directory

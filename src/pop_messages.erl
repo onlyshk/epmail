@@ -16,6 +16,7 @@
 -export([is_message_list/1]).
 -export([is_message_retr/1]).
 -export([is_message_dele/1]).
+-export([is_message_uidl/1]).
 
 -vsn('0.2').
 -author('kuleshovmail@gmail.com').
@@ -169,5 +170,35 @@ is_message_dele(Message) ->
 	   error;
        
        _ ->
+	   error
+   end.
+
+%
+% POP3 UIDL  num message
+% +OK message num has (num octets)
+%
+is_message_uidl([]) ->
+    error;
+is_message_uidl(Message) ->
+  [H | T] = string:tokens(Message, " "),
+   case [H | T] of
+      ["uidl", _]  ->
+	  {H, T};
+       
+      ["uidl"] ->
+      	   {H};
+       
+      [_, _] ->
+	  error;
+      
+      [_] ->
+          error;
+
+      uidl ->
+          error;
+       
+      [] ->
+	   error;
+      _ ->
 	   error
    end.

@@ -126,11 +126,48 @@ loop_for_list(State, FileCount)  ->
     lists:zipwith(fun (X1, X2) -> gen_tcp:send(State#state.socket, [integer_to_list(X1), " " ++ integer_to_list(X2)]
 					       ++ "\r\n") end, lists:seq(1, FileCount), OctetList).
 
+loop_for_uidl(State, FileCount)  ->
+    Domain = maildir:find_domain(lists:concat(State#state.username)),
+    {ok, UIDLList} = file:list_dir(Domain ++ State#state.username ++ "/new/"),
+    lists:zipwith(fun (X1, X2) -> gen_tcp:send(State#state.socket, [integer_to_list(X1), " " ++ X2]
+    					       ++ "\r\n") end, lists:seq(1, FileCount), UIDLList).
+
 transaction(Event, State) ->    
     case gen_tcp:recv(State#state.socket, 0) of
 	{ok, Data} ->
 	    ReParseData = string:to_lower(utils:trim(Data)),
 	    Domain = maildir:find_domain(lists:concat(State#state.username)),
+
+	    try
+	    	case pop_messages:is_message_uidl(ReParseData) of
+		     { _ , [U | _] } ->
+			FilesCount = utils:files_count(Domain ++ State#state.username ++ "/new"),
+			MessageNumUIDL = list_to_integer(U),
+			
+			if
+			    ((MessageNumUIDL == 0) or (MessageNumUIDL > FilesCount))->
+				gen_tcp:send(State#state.socket, "-ERR \r\n"),
+				transaction(Event, State); 
+			    true ->
+				UIDLList = utils:get_file_name_by_num(Domain ++ State#state.username ++ "/new/", list_to_integer(U)),
+				gen_tcp:send(State#state.socket, "+OK " ++ U ++ " " ++ UIDLList ++ "\r\n"),
+				gen_tcp:send(State#state.socket, ".\r\n"),
+				transaction(Event, State)
+			end;
+		    {_} ->
+			FilesCount = utils:files_count(Domain ++ State#state.username ++ "/new"),
+
+			gen_tcp:send(State#state.socket, "+OK\r\n"),
+
+			loop_for_uidl(State, FilesCount),
+			gen_tcp:send(State#state.socket, ".\r\n"),
+	    		transaction(Event, State);
+			
+			error ->
+				error
+	    	    end
+	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    end,
 	    
 	    try
 		case pop_messages:is_message_list(ReParseData) of
