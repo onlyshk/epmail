@@ -43,7 +43,7 @@ init([]) ->
 	ets ->
 	    ets;
 	sqlite3 ->
-	    sqlite3:open(user_db, [in_memory]),
+	    sqlite3:open(user_db),
 	    TableInfo = [{user, text, [not_null]}, {password, text, [not_null]}, {domain, text, [not_null]}],
 	    ok = sqlite3:create_table(user_db, users, TableInfo)
     end,
