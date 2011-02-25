@@ -267,13 +267,12 @@ recv_rcpt_transaction(Event, State) ->
 										  io:format(Ehlo),
 										  io:format(State#state.client),
 										  gen_tcp:send(Socket,
-											       "mail from: " ++ " shk@shk.dyndns-mail.com" ++ "\r\n"),
+											       "mail from: " ++ State#state.client ++ "\r\n"),
 										  case gen_tcp:recv(Socket, 0) of
 										      {ok, MailFrom} ->
 											  io:format(MailFrom),
 											  lists:map(fun(X) -> gen_tcp:send(Socket,
-															   "rcpt to: "  ++
-															       "<kommunist1917@mail.ru>"
+															   "rcpt to: "  ++ X
 															   ++ "\r\n")
 											    end, RemoteList),
 											      case gen_tcp:recv(Socket, 0) of
@@ -284,7 +283,7 @@ recv_rcpt_transaction(Event, State) ->
 													  {ok, Ans} ->
 													      io:format(Ans),
 													      gen_tcp:send(Socket,
-															   "ASD"  ++ "\r\n"),
+															   Packet  ++ "\r\n"),
 													      gen_tcp:send(Socket, ".\r\n"),
 														  case gen_tcp:recv(Socket, 0) of
 														      {ok, Q} ->
