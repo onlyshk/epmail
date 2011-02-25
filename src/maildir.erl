@@ -156,6 +156,18 @@ check_pass(UserName, Password) ->
 		true ->
 		    error
 	    end;
+
+	sqlite3 ->
+	    [_, T] = sqlite3:sql_exec(user_db, "SELECT password FROM users WHERE user = ?", [{1, UserName}]),
+	    {rows, Domain_in_tupple} = T,
+	    [{Domain_in_bin}] = Domain_in_tupple,
+	    PasswordForSqlite3 = binary_to_list(Domain_in_bin),
+	    if
+		(Password =:= PasswordForSqlite3) ->
+		    ok;
+		true ->
+		    error
+	    end;
 	
 	ets ->
 	    case ets:lookup(usersTable, UserName) of
