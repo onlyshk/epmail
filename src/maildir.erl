@@ -48,6 +48,12 @@ add_user(Domain, UserName, Password) ->
     {ok, Config} = config:read(config),
     UserStorage = config:get_key(user_storage, Config),
 
+    %% | Postgresql data
+    Host = config:get_key(host, Config),
+    Database = config:get_key(database, Config), 
+    User = config:get_key(user, Config),
+    Login = config:get_key(login, Config),
+
     case UserStorage of
 	mnesia ->
 	    User = #users{username = UserName, password = Password},
@@ -57,7 +63,12 @@ add_user(Domain, UserName, Password) ->
 	ets ->
 	    ets:insert(usersTable, {UserName, Domain, Password});
 	sqlite3 ->
-	    sqlite3:write(user_db, users, [{user, UserName}, {domain, Domain}, {password, Password}])
+	    sqlite3:write(user_db, users, [{user, UserName}, {domain, Domain}, {password, Password}]);
+	postgresql ->
+	    {ok, Db} = pgsql:connect(Host, Database, User, Login),
+	    pgsql:prepare(Db, insert, "INSERT INTO mail_user (name, domain, password) VALUES ($1 ,$2 ,$3)"),
+	    ABs = [{UserName, Domain, Password}],
+	    [pgsql:execute(Db, insert, [A, B, C]) || {A,B,C} <- ABs]
     end.
 
 %
@@ -67,6 +78,11 @@ delete_user(UserName) ->
     {ok, Config} = config:read(config),
     UserStorage = config:get_key(user_storage, Config),
 
+    Host = config:get_key(host, Config),
+    Database = config:get_key(database, Config), 
+    User = config:get_key(user, Config),
+    Login = config:get_key(login, Config),
+
     case UserStorage of
 	mnesia ->
 	    mnesia:transaction(fun() -> mnesia:delete({users, UserName}) end);
@@ -75,7 +91,10 @@ delete_user(UserName) ->
 	ets ->
 	    ets:delete(usersTable, {UserName, '_', '_'});
 	sqlite3 ->
-	    sqlite3:delete(user_db, users, {user, UserName})
+	    sqlite3:delete(user_db, users, {user, UserName});
+	postgresql ->
+	    {ok, Db} = pgsql:connect(Host, Database, User, Login),
+	    pgsql:pquery(Db, "DELETE FROM  mail_user  WHERE name = $1", [UserName])
     end.
 %
 % Find domain by User Name
@@ -83,6 +102,13 @@ delete_user(UserName) ->
 find_domain(UserName) ->
     {ok, Config} = config:read(config),
     UserStorage = config:get_key(user_storage, Config),
+
+    %% | Postgresql data
+    Host = config:get_key(host, Config),
+    Database = config:get_key(database, Config), 
+    User = config:get_key(user, Config),
+    Login = config:get_key(login, Config),
+
 
     case UserStorage of
 	mnesia ->
@@ -98,7 +124,13 @@ find_domain(UserName) ->
 	    [_, T] = sqlite3:sql_exec(user_db, "SELECT domain FROM users WHERE user = ?", [{1, UserName}]),
 	    {rows, Domain_in_tupple} = T,
 	    [{Domain_in_bin}] = Domain_in_tupple,
-	    binary_to_list(Domain_in_bin)
+	    binary_to_list(Domain_in_bin);
+	 postgresql ->
+	    {ok, Db} = pgsql:connect(Host, Database, User, Login),
+	    {ok, _, _, _, Rows} = pgsql:pquery(Db, "SELECT domain FROM  mail_user  WHERE name = $1", [UserName]),
+	    [Row] = Rows,
+	    {D} = Row,
+	    binary_to_list(D)
     end.
 
 %
@@ -120,6 +152,8 @@ create_key_value_user_pass_db(UsersPath) ->
 	    ets:new(usersTable, [bag]);
 	sqlite3 ->
 	    sqlite3;
+	postgresql ->
+	    postgresql;
 	_ ->
 	    error
     end.
@@ -143,13 +177,19 @@ destroy() ->
 %
 % Check username's password
 %
-check_pass(UserName, Password) ->
+check_pass( UserName, Password) ->
     {ok, Config} = config:read(config),
     UserStorage = config:get_key(user_storage, Config),
 
+    %% | Postgresql data
+    Host = config:get_key(host, Config),
+    Database = config:get_key(database, Config), 
+    User = config:get_key(user, Config),
+    Login = config:get_key(login, Config),
+
     case UserStorage of
 	mnesia ->
-	    {_, [{_,_,MnesiaPass}]} = mnesia:transaction(fun() -> mnesia:read({users, UserName}) end),
+	    {_, [{_,_, MnesiaPass}]} = mnesia:transaction(fun() -> mnesia:read({users, UserName}) end),
 	    if
 		(Password =:= MnesiaPass) ->
 		    ok;
@@ -171,7 +211,7 @@ check_pass(UserName, Password) ->
 	
 	ets ->
 	    case ets:lookup(usersTable, UserName) of
-		[{_,_,EtsPass}] ->
+		[{_,_, EtsPass}] ->
 		    if
 			(Password =:= EtsPass) ->
 			    ok;
@@ -184,7 +224,7 @@ check_pass(UserName, Password) ->
 	
 	dets->
 	    case dets:lookup(upDisk, UserName) of
-		[{_,_,DetsPass}]->
+		[{_, _, DetsPass}]->
 		    if
 			(Password =:= DetsPass) ->
 			    ok;
@@ -193,7 +233,21 @@ check_pass(UserName, Password) ->
 		    end;
 		[] ->
 		    error
-	    end
+	    end;
+	
+	postgresql ->
+	    {ok, Db} = pgsql:connect(Host, Database, User, Login),
+	    {ok, _, _, _, Rows} = pgsql:pquery(Db, "SELECT password FROM  mail_user  WHERE name = $1", [UserName]),
+	    [Row] = Rows,
+	    {PostgrePassBin} = Row,
+	    PostgrePass = binary_to_list(PostgrePassBin),
+
+	     if
+		 (Password =:= PostgrePass) ->
+			    ok;
+		 true ->
+		     error
+	     end
     end.
 	    
 	    

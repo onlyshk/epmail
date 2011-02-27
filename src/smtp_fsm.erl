@@ -44,6 +44,7 @@ init([Socket, Client]) ->
 autorization(Event, State) ->    
     case gen_tcp:recv(State#state.socket, 0) of
 	{ok, Data} ->
+	    io:format("AAAAAAAAAAAAA"),
 	    ReParseData = string:to_lower(utils:trim(Data)),
 
 	    {ok, Config} = config:read(config),
@@ -272,7 +273,8 @@ recv_rcpt_transaction(Event, State) ->
 										      {ok, MailFrom} ->
 											  io:format(MailFrom),
 											  lists:map(fun(X) -> gen_tcp:send(Socket,
-															   "rcpt to: "  ++ X
+															   "rcpt to: "  ++
+															       X
 															   ++ "\r\n")
 											    end, RemoteList),
 											      case gen_tcp:recv(Socket, 0) of
@@ -283,7 +285,7 @@ recv_rcpt_transaction(Event, State) ->
 													  {ok, Ans} ->
 													      io:format(Ans),
 													      gen_tcp:send(Socket,
-															   Packet  ++ "\r\n"),
+															   "ASD"  ++ "\r\n"),
 													      gen_tcp:send(Socket, ".\r\n"),
 														  case gen_tcp:recv(Socket, 0) of
 														      {ok, Q} ->
