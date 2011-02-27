@@ -24,7 +24,7 @@
 {error_logger_path, logger}.
 
 %% Domain name local storage
-{domain, ["shk.dyndns-mail.com"]}.
+{domain, ["localhost"]}.
 
 %% User storage: 
 %% | dets
