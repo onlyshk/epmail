@@ -44,7 +44,6 @@ init([Socket, Client]) ->
 autorization(Event, State) ->    
     case gen_tcp:recv(State#state.socket, 0) of
 	{ok, Data} ->
-	    io:format("AAAAAAAAAAAAA"),
 	    ReParseData = string:to_lower(utils:trim(Data)),
 
 	    {ok, Config} = config:read(config),
@@ -210,8 +209,8 @@ recv_rcpt_transaction(Event, State) ->
 			SplitAddressList = [string:tokens(S, "@") || [S] <- utils:parse_to(Packet)],
 
 			LocalList = [X || X <- SplitAddressList, Y <- Domain,   lists:last(X) == Y],
-			RemoteList =  [X || X <- SplitAddressList, Y <- Domain, lists:last(X) /= Y],
-			
+			RemoteList =  [utils:get_head(X) ++ "@" ++ lists:last(X) || X <- SplitAddressList,
+										    Y <- Domain, not (string:equal(lists:last(X), Y))],
 			%
 			% Send mail to local server
 			% First of all check domain
@@ -238,62 +237,69 @@ recv_rcpt_transaction(Event, State) ->
 			end,
 
 			case RemoteList of
-				    [] ->
-				 	[];
-				    _ ->
-				 	MX = lists:map(fun(X) ->
-							       utils:get_mx(lists:last(X))
-						       end,
-						       RemoteList),
-
-					MxAddresses = lists:map(fun(X) ->
-									{_, Last} = lists:nth(1, X),
-									Last
-								end,
-								MX),
-
-					Opts = [list, {reuseaddr, true}, 
-						{keepalive, false}, {ip,{0,0,0,0}}, {active, false}],
-
-
-					lists:map(fun(MxAd) ->
-							  case gen_tcp:connect(MxAd, Port, Opts) of
-							      {ok, Socket} ->
+			    [] ->
+				[];
+			    _ ->
+				MXWithSpace = lists:map(fun(X) -> string:tokens(X, " ") end, RemoteList),
+				MXWithS = lists:map(fun(X) -> string:tokens(X, "@") end, lists:nth(1,MXWithSpace)),
+				
+				% lists:last(lists:nth(1, MXWithS - Domain
+			        % utils:get_head(lists:nth(1, MXWithS - Name
+				
+				MX = lists:map(fun(X) ->
+						       utils:get_mx(lists:last(X))
+					       end,
+					       MXWithS),
+				
+				MxAddresses = lists:map(fun(X) ->
+								{_, Last} = lists:nth(1, X),
+								Last
+							end,
+							MX),
+				
+				Opts = [list, {reuseaddr, true}, 
+					{keepalive, false}, {ip,{0,0,0,0}}, {active, false}],
+				
+				lists:map(fun(MxAd) ->
+						  case gen_tcp:connect(MxAd, Port, Opts) of
+						      {ok, Socket} ->
+							  case gen_tcp:recv(Socket, 0) of
+							      {ok, Starting} ->
+								  io:format(Starting),
+								  gen_tcp:send(Socket, "ehlo " ++ SmtpServerName  ++ "\r\n"),
 								  case gen_tcp:recv(Socket, 0) of
-								      {ok, Starting} ->
-									  io:format(Starting),
-									  gen_tcp:send(Socket, "ehlo " ++ SmtpServerName  ++ "\r\n"),
+								      {ok, Ehlo} ->
+									  io:format(Ehlo),
+									  io:format(State#state.client),
+									  gen_tcp:send(Socket,
+										       "mail from: " ++ State#state.client ++ "\r\n"),
 									  case gen_tcp:recv(Socket, 0) of
-									      {ok, Ehlo} ->
-										  io:format(Ehlo),
-										  io:format(State#state.client),
-										  gen_tcp:send(Socket,
-											       "mail from: " ++ State#state.client ++ "\r\n"),
+									      {ok, MailFrom} ->
+										  io:format(MailFrom),
+										  lists:map(fun(X) ->
+												    io:format(string:tokens(X, " ")),
+												    gen_tcp:send(Socket,
+														 "rcpt to: "  ++
+														     X
+														 ++ "\r\n")
+											    end, MXWithSpace),
 										  case gen_tcp:recv(Socket, 0) of
-										      {ok, MailFrom} ->
-											  io:format(MailFrom),
-											  lists:map(fun(X) -> gen_tcp:send(Socket,
-															   "rcpt to: "  ++
-															       X
-															   ++ "\r\n")
-											    end, RemoteList),
-											      case gen_tcp:recv(Socket, 0) of
-												  {ok, RC} ->
-												      io:format(RC),
-												      gen_tcp:send(Socket, "data" ++ "\r\n"),
-												      case gen_tcp:recv(Socket, 0) of
-													  {ok, Ans} ->
-													      io:format(Ans),
+										      {ok, RC} ->
+											  io:format(RC),
+											  gen_tcp:send(Socket, "data" ++ "\r\n"),
+											  case gen_tcp:recv(Socket, 0) of
+											      {ok, Ans} ->
+												  io:format(Ans),
 													      gen_tcp:send(Socket,
-															   "ASD"  ++ "\r\n"),
+													      		   Packet  ++ "\r\n"),
 													      gen_tcp:send(Socket, ".\r\n"),
-														  case gen_tcp:recv(Socket, 0) of
-														      {ok, Q} ->
-															  io:format(Q),
-															  gen_tcp:send("quit\r\n");
-														      {error, Reason} ->
-															  io:format(Reason)
-														  end;
+													      	  case gen_tcp:recv(Socket, 0) of
+													      	      {ok, Q} ->
+													      		  io:format(Q),
+													      		  gen_tcp:send("quit\r\n");
+													      	      {error, Reason} ->
+													      		  io:format(Reason)
+													      	  end;
 													  {error, Reason} ->
 													      Reason
 												      end;     
