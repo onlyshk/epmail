@@ -24,7 +24,22 @@
 {error_logger_path, logger}.
 
 %% Domain name local storage
-{domain, ["localhost", "kuleshov.no-ip.org"]}.
+{domain, ["localhost"]}.
 
-%% User storage dets || mnesia || ets || sqlite3
-{user_storage, sqlite3}.
+%% User storage: 
+%% | dets
+%% | ets
+%% | mnesia
+%% | sqlite
+%% | postgresql
+{user_storage, dets}.
+
+%% Postgressql connect data
+%% Host
+{host, "localhost"}.
+%% Database Name
+{database, "user_db"}.
+%% User
+{user, "user"}.
+%% Password
+{login, "pass"}.

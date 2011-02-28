@@ -48,5 +48,14 @@ You can connect to servers by telnet or you can use mail client, thunderbird for
 ## EPmail TODO and Issues
   EPmail issues - <https://github.com/onlyshk/epmail/issues>
 
+## Dependency
+if you want to use PostgreSql to storage user data:
+ * PostgreSql
+ * pgsql (<https://github.com/noss/pgsql>)
+
+if you want to user sqlite3 to storage user data:
+ * Sqlite3
+ * erlang-sqlite3 (<https://github.com/alexeyr/erlang-sqlite3>)
+
 ## More info
   More info - kuleshovmail@gmail.com
