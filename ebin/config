@@ -3,10 +3,10 @@
 %
 
 %% Smtp server name
-{smtp_server_name, "_"}.
+{smtp_server_name, "shk.dyndns-mail.com"}.
 
 %% Pop3 server name
-{pop3_server_name, "_"}.
+{pop3_server_name, "shk.dyndns-mail.com"}.
 
 %% Smtp port
 {smtp_port, 25}.
@@ -24,22 +24,13 @@
 {error_logger_path, logger}.
 
 %% Domain name local storage
-{domain, ["localhost"]}.
+{domain, ["shk.dyndns-mail.com"]}.
 
-%% User storage: 
-%% | dets
-%% | ets
-%% | mnesia
-%% | sqlite
-%% | postgresql
+%% User storage dets || mnesia || ets || sqlite3 || postgresql
 {user_storage, dets}.
 
 %% Postgressql connect data
-%% Host
 {host, "localhost"}.
-%% Database Name
 {database, "user_db"}.
-%% User
-{user, "user"}.
-%% Password
-{login, "pass"}.
+{user, "shk"}.
+{login, "qwerty"}.
