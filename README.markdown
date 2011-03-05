@@ -11,7 +11,7 @@ In erlang shell:
 
 Add user 3 parameters: Domain Name Password
 
-    maildir:adduser("localhost/", "admin", "123").
+    maildir:adduser("localhost", "admin", "123").
 
 ## Test
 You can connect to servers by telnet or you can use mail client, thunderbird for example:

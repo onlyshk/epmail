@@ -267,6 +267,7 @@ recv_rcpt_transaction(Event, State) ->
 							      {ok, Starting} ->
 								  io:format(Starting),
 								  gen_tcp:send(Socket, "ehlo " ++ SmtpServerName  ++ "\r\n"),
+								  gen_tcp:send(Socket, "starttls" ++ "\r\n"),
 								  case gen_tcp:recv(Socket, 0) of
 								      {ok, Ehlo} ->
 									  io:format(Ehlo),

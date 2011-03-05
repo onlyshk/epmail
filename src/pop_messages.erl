@@ -38,8 +38,7 @@ is_message_user(UserName) when is_list(UserName) ->
  
    case [H | T] of
       ["user", _] ->
-	   {H, T};
-       
+	   {H, T};  
       
       [_, _] ->
 	  error;

@@ -41,9 +41,9 @@ add_user(_, _, []) ->
 % Password - password for access to user mailbox
 %
 add_user(Domain, UserName, Password) ->
-    filelib:ensure_dir(Domain ++ UserName ++ "/"),
-    filelib:ensure_dir(Domain ++ UserName ++ "/" ++ "new" ++ "/"),
-    filelib:ensure_dir(Domain ++ UserName ++ "/" ++ "tmp" ++ "/"),
+    filelib:ensure_dir(Domain ++ "/" ++ UserName ++ "/"),
+    filelib:ensure_dir(Domain ++ "/" ++ UserName ++ "/" ++ "new" ++ "/"),
+    filelib:ensure_dir(Domain ++ "/" ++ UserName ++ "/" ++ "tmp" ++ "/"),
 
     {ok, Config} = config:read(config),
     UserStorage = config:get_key(user_storage, Config),

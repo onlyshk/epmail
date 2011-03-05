@@ -3,10 +3,10 @@
 %
 
 %% Smtp server name
-{smtp_server_name, "_"}.
+{smtp_server_name, "localhost"}.
 
 %% Pop3 server name
-{pop3_server_name, "_"}.
+{pop3_server_name, "localhost"}.
 
 %% Smtp port
 {smtp_port, 25}.
@@ -26,20 +26,11 @@
 %% Domain name local storage
 {domain, ["localhost"]}.
 
-%% User storage: 
-%% | dets
-%% | ets
-%% | mnesia
-%% | sqlite
-%% | postgresql
+%% User storage dets || mnesia || ets || sqlite3 || postgresql
 {user_storage, dets}.
 
 %% Postgressql connect data
-%% Host
 {host, "localhost"}.
-%% Database Name
 {database, "user_db"}.
-%% User
-{user, "user"}.
-%% Password
-{login, "pass"}.
+{user, "shk"}.
+{login, "qwerty"}.

@@ -48,8 +48,8 @@ autorization(Event, State) ->
     case gen_tcp:recv(State#state.socket, 0) of
 	{ok, Data} ->
 	    ReParseData = string:to_lower(utils:trim(Data)),
-	        	        	        
-	  %% User login command
+
+	    %% User login command
 	    try
 		case pop_messages:is_message_user(ReParseData) of 
 		    { _ , Name } ->
@@ -98,7 +98,7 @@ autorization(Event, State) ->
 		end
 	    catch _:_ -> gen_tcp:close(State#state.socket)
 	    end,
-
+	          
 	    try
 		case ReParseData of
 		    "quit" ->
