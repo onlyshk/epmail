@@ -128,7 +128,7 @@ loop_for_list(State, FileCount)  ->
 
 loop_for_uidl(State, FileCount)  ->
     Domain = maildir:find_domain(lists:concat(State#state.username)),
-    {ok, UIDLList} = file:list_dir(Domain ++ State#state.username ++ "/new/"),
+    {ok, UIDLList} = file:list_dir(Domain ++ "/" ++ State#state.username ++ "/new/"),
     lists:zipwith(fun (X1, X2) -> gen_tcp:send(State#state.socket, [integer_to_list(X1), " " ++ X2]
     					       ++ "\r\n") end, lists:seq(1, FileCount), UIDLList).
 
@@ -149,13 +149,13 @@ transaction(Event, State) ->
 				gen_tcp:send(State#state.socket, "-ERR \r\n"),
 				transaction(Event, State); 
 			    true ->
-				UIDLList = utils:get_file_name_by_num(Domain ++ State#state.username ++ "/new/", list_to_integer(U)),
+				UIDLList = utils:get_file_name_by_num(Domain ++ "/" ++ State#state.username ++ "/new/", list_to_integer(U)),
 				gen_tcp:send(State#state.socket, "+OK " ++ U ++ " " ++ UIDLList ++ "\r\n"),
 				gen_tcp:send(State#state.socket, ".\r\n"),
 				transaction(Event, State)
 			end;
 		    {_} ->
-			FilesCount = utils:files_count(Domain ++ State#state.username ++ "/new"),
+			FilesCount = utils:files_count(Domain ++ "/" ++ State#state.username ++ "/new"),
 
 			gen_tcp:send(State#state.socket, "+OK\r\n"),
 
