@@ -122,7 +122,7 @@ autorization(Event, State) ->
 
 loop_for_list(State, FileCount)  ->
     Domain = maildir:find_domain(lists:concat(State#state.username)),
-    OctetList = utils:get_list_octets(Domain ++ State#state.username ++ "/new"),
+    OctetList = utils:get_list_octets(Domain ++ "/" ++ State#state.username ++ "/new"),
     lists:zipwith(fun (X1, X2) -> gen_tcp:send(State#state.socket, [integer_to_list(X1), " " ++ integer_to_list(X2)]
 					       ++ "\r\n") end, lists:seq(1, FileCount), OctetList).
 
@@ -180,7 +180,7 @@ transaction(Event, State) ->
 				gen_tcp:send(State#state.socket, "-ERR \r\n"),
 				transaction(Event, State); 
 			    true ->
-				Octets = utils:get_octet_from_file(Domain ++ State#state.username ++ "/new", list_to_integer(H)),
+				Octets = utils:get_octet_from_file(Domain ++ "/" ++ State#state.username ++ "/new", list_to_integer(H)),
 				gen_tcp:send(State#state.socket, "+OK " ++ H ++ " " ++ integer_to_list(Octets) ++ "\r\n"),
 				gen_tcp:send(State#state.socket, ".\r\n"),
 				transaction(Event, State)
@@ -190,8 +190,8 @@ transaction(Event, State) ->
 			%% 1 120
 			%% 2 200
 			%% .
-			OctetSumm = utils:octets_summ(Domain ++ State#state.username ++ "/new"),
-			FileCount = utils:files_count(Domain ++ State#state.username ++ "/new"),
+			OctetSumm = utils:octets_summ(Domain ++ "/" ++ State#state.username ++ "/new"),
+			FileCount = utils:files_count(Domain ++ "/" ++ State#state.username ++ "/new"),
 			gen_tcp:send(State#state.socket, "+OK " ++ integer_to_list(FileCount) ++ " message (" ++ integer_to_list(OctetSumm)
 					     ++ " octets)\r\n"),
 			loop_for_list(State, FileCount),
@@ -210,7 +210,7 @@ transaction(Event, State) ->
 	    try
 		case pop_messages:is_message_retr(ReParseData) of
 		    {_, [Retr | _ ]} ->			      
-			Message = utils:get_file_path_by_num(Domain ++ State#state.username ++ "/new",
+			Message = utils:get_file_path_by_num(Domain ++ "/" ++ State#state.username ++ "/new",
 			      							     list_to_integer(Retr)),
 			{ok, Text} = file:read_file(Message),
 			FileSize = filelib:file_size(Message),
@@ -232,7 +232,7 @@ transaction(Event, State) ->
 			gen_tcp:send(State#state.socket, "+OK message" ++ " "),
 			gen_tcp:send(State#state.socket, Dele ++ " "),
 			gen_tcp:send(State#state.socket, "deleted \r\n"),
-			utils:delete_messages(Domain ++ State#state.username, list_to_integer(Dele)),
+			utils:delete_messages(Domain ++ "/" ++ State#state.username, list_to_integer(Dele)),
 			transaction(Event, State);
 		    error ->
 			error
@@ -250,20 +250,20 @@ transaction(Event, State) ->
 		      transaction(Event, State);
 		    "stat" ->
 		       DomainForSTAT = maildir:find_domain(lists:concat(State#state.username)),
-		       MessageCount = utils:files_count(DomainForSTAT ++ State#state.username ++ "/new"),
-		       Octet = utils:octets_summ(DomainForSTAT ++ State#state.username ++ "/new"),
+		       MessageCount = utils:files_count(DomainForSTAT ++ "/" ++ State#state.username ++ "/new"),
+		       Octet = utils:octets_summ(DomainForSTAT ++ "/" ++ State#state.username ++ "/new"),
 		       gen_tcp:send(State#state.socket, "+OK "),
 		       gen_tcp:send(State#state.socket, integer_to_list(MessageCount) ++ " "),
 		       gen_tcp:send(State#state.socket, integer_to_list(Octet) ++ "\r\n"),
 		       transaction(Event, State);
 		    "rset" ->
 			DomainForRSET = maildir:find_domain(lists:concat(State#state.username)),
-			MessCount = utils:files_count(DomainForRSET ++ State#state.username ++ "/tmp"),
-			Octet = utils:octets_summ(DomainForRSET ++ State#state.username ++ "/tmp"),
+			MessCount = utils:files_count(DomainForRSET ++ "/" ++ State#state.username ++ "/tmp"),
+			Octet = utils:octets_summ(DomainForRSET ++ "/" ++ State#state.username ++ "/tmp"),
 			gen_tcp:send(State#state.socket, "+OK maildrop has " ++ integer_to_list(MessCount) ++ " messages"),
 			gen_tcp:send(State#state.socket, " (" ++ integer_to_list(Octet) ++ " octets)" ++ "\r\n"),
-			utils:copy_files_for_rset(DomainForRSET ++ State#state.username ++ "/tmp" ++ "/",
-						  DomainForRSET ++ State#state.username ++ "/new"),
+			utils:copy_files_for_rset(DomainForRSET ++ "/" ++ State#state.username ++ "/tmp" ++ "/",
+						  DomainForRSET ++ "/" ++ State#state.username ++ "/new"),
 			transaction(Event, State);
 		    _ ->
 			gen_tcp:send(State#state.socket, pop_messages:err_message()),
