@@ -26,7 +26,6 @@
 -export([get_file_path_by_num/2]).
 
 -export([get_mx/1]).
--export([parse_to/1]).
 
 -include_lib("kernel/src/inet_dns.hrl").
 
@@ -162,18 +161,9 @@ split_mail_address([]) ->
     [];
 split_mail_address(MailAddress) ->
     Add1 = string:strip(MailAddress, both, $<),
-    Add2 = string:strip(Add1, both, $>),
-    [_ | T] = string:tokens(Add2, "@"),
-    T.
+    Add2 = string:strip(Add1, both, $>).
 
-parse_to(Data) ->
-    List = string:tokens(Data, "\r\n"),
-    Sep1 = lists:map(fun(H) ->string:tokens(H, ":") end, List),
-    Sep2 = lists:filter(fun ([K | _]) -> K =:= "To" end, Sep1),
-    ListAddress = lists:append(Sep2),
-    [_ | Tail] = ListAddress,
-    lists:map(fun(Address) -> string:tokens(Address, ",") end, Tail).
-
+%
 %
 % get mx record
 %

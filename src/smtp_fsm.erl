@@ -138,7 +138,7 @@ mail_transaction(Event, State) ->
 			if
 			    (length(Mail) > 0) ->
 				gen_tcp:send(State#state.socket, "250 OK \r\n"),
-				recv_rcpt_transaction(Event, State#state{client = Mail});
+				recv_rcpt_transaction(Event, State#state{client = utils:split_mail_address(Mail)});
 			    true ->
 				mail_transaction(Event, State)
 			end;  
@@ -181,7 +181,7 @@ recv_rcpt_transaction(Event, State) ->
 		    { _ , Rcpt } ->
 		        ListParse = lists:map(fun(X) -> utils:split_mail_address(X) end, Rcpt),
 			gen_tcp:send(State#state.socket, "250 OK \r\n"),
-			recv_rcpt_transaction(Event, State#state{rcpt = lists:append(ListParse, State#state.rcpt)});  
+			recv_rcpt_transaction(Event, State#state{rcpt = ListParse});  
 		    error ->
 			error  
 		end
@@ -200,13 +200,11 @@ recv_rcpt_transaction(Event, State) ->
 			gen_tcp:send(State#state.socket, "354 Enter mail, end with . on a line by itself \r\n"),
 			
 			{ok, Packet} = do_recv(State#state.socket, []),
-		
 		        {ok, Config} = config:read(config),
 			Domain = config:get_key(domain, Config),
 			Port   = config:get_key(smtp_port, Config),
 			SmtpServerName = config:get_key(smtp_server_name, Config),
-
-			SplitAddressList = [string:tokens(S, "@") || [S] <- utils:parse_to(Packet)],
+			SplitAddressList = [string:tokens(S, "@") || S <- State#state.rcpt],  % utils:parse_to(lists:flatten(Packet))],
 
 			LocalList = [X || X <- SplitAddressList, Y <- Domain,   lists:last(X) == Y],
 			RemoteList =  [utils:get_head(X) ++ "@" ++ lists:last(X) || X <- SplitAddressList,
@@ -225,10 +223,11 @@ recv_rcpt_transaction(Event, State) ->
 				% Need normal random generator
 				{H, M, S} = now(),
 				Summ = random:uniform(H + M + S),
-			
+
 				lists:map(fun(X) ->
+						  io:format(lists:last(X) ++ "/" ++ utils:get_head(X)),
 						  {ok, WD} = file:open(lists:last(X) ++ "/" ++
-									   string:tokens(utils:get_head(X), " ") ++ "/new/" ++ integer_to_list(Summ),
+									   utils:get_head(X) ++ "/new/" ++ integer_to_list(Summ),
 								       [raw, append]),
 						  file:write(WD, Packet),
 						  file:close(WD)
@@ -242,24 +241,24 @@ recv_rcpt_transaction(Event, State) ->
 			    _ ->
 				MXWithSpace = lists:map(fun(X) -> string:tokens(X, " ") end, RemoteList),
 				MXWithS = lists:map(fun(X) -> string:tokens(X, "@") end, lists:nth(1,MXWithSpace)),
-				
+
 				% lists:last(lists:nth(1, MXWithS - Domain
 			        % utils:get_head(lists:nth(1, MXWithS - Name
-				
+
 				MX = lists:map(fun(X) ->
 						       utils:get_mx(lists:last(X))
 					       end,
 					       MXWithS),
-				
+
 				MxAddresses = lists:map(fun(X) ->
 								{_, Last} = lists:nth(1, X),
 								Last
 							end,
 							MX),
-				
+
 				Opts = [list, {reuseaddr, true}, 
 					{keepalive, false}, {ip,{0,0,0,0}}, {active, false}],
-				
+
 				lists:map(fun(MxAd) ->
 						  case gen_tcp:connect(MxAd, Port, Opts) of
 						      {ok, Socket} ->
@@ -322,7 +321,8 @@ recv_rcpt_transaction(Event, State) ->
 						  end,
 						  MxAddresses)	    
 			end;
-		    "rset" ->
+		    
+		     "rset" ->
 			gen_tcp:send(State#state.socket, "250 OK \r\n"),
 			autorization(Event, State#state{client = underfined});
 		    _ ->
