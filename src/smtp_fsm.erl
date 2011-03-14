@@ -225,7 +225,6 @@ recv_rcpt_transaction(Event, State) ->
 				Summ = random:uniform(H + M + S),
 
 				lists:map(fun(X) ->
-						  io:format(lists:last(X) ++ "/" ++ utils:get_head(X)),
 						  {ok, WD} = file:open(lists:last(X) ++ "/" ++
 									   utils:get_head(X) ++ "/new/" ++ integer_to_list(Summ),
 								       [raw, append]),

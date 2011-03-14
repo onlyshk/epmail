@@ -32,6 +32,7 @@ init([]) ->
     UserStorage = config:get_key(user_storage, Config),
     Pop3ServerStart = config:get_key(pop3_server_start, Config),
     SmtpServerStart = config:get_key(smtp_server_start, Config),
+    Sqlite3DataBase = config:get_key(sqlite3_database, Config),
     
     case UserStorage of
 	mnesia ->
@@ -43,7 +44,7 @@ init([]) ->
 	ets ->
 	    ets;
 	sqlite3 ->
-	    sqlite3:open(user_db),
+	    sqlite3:open(Sqlite3DataBase),
 	    TableInfo = [{user, text, [not_null]}, {password, text, [not_null]}, {domain, text, [not_null]}],
 	    ok = sqlite3:create_table(user_db, users, TableInfo)
     end,
