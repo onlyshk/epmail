@@ -29,8 +29,22 @@
 %% User storage dets || mnesia || ets || sqlite3 || postgresql
 {user_storage, dets}.
 
-%% Postgressql connect data
+%% Sqlite3 data
+%%_____________
+%% sqlite3 database
+{sqlite3_database, "user_db"}.
+
+%%
+%% | Postgressql connect data
+%%
+%% Host
 {host, "localhost"}.
+
+%% Database name
 {database, "user_db"}.
+
+%% User
 {user, "shk"}.
+
+%% Password
 {login, "qwerty"}.
