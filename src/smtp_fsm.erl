@@ -222,11 +222,14 @@ recv_rcpt_transaction(Event, State) ->
 				% TODO
 				% Need normal random generator
 				{H, M, S} = now(),
-				Summ = random:uniform(H + M + S),
+				Sum = lists:map(fun(_) -> {A, B, C} = erlang:now(),
+							   random:seed(A, B, C), random:uniform(1000) end, lists:seq(1,10)),
+				
+				DoSum = lists:sum(Sum) + H + M + S,
 
 				lists:map(fun(X) ->
 						  {ok, WD} = file:open(lists:last(X) ++ "/" ++
-									   utils:get_head(X) ++ "/new/" ++ integer_to_list(Summ),
+									   utils:get_head(X) ++ "/new/" ++ integer_to_list(DoSum),
 								       [raw, append]),
 						  file:write(WD, Packet),
 						  file:close(WD)

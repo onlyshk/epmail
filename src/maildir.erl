@@ -44,7 +44,6 @@ add_user(Domain, UserName, Password) ->
     filelib:ensure_dir(Domain ++ "/" ++ UserName ++ "/"),
     filelib:ensure_dir(Domain ++ "/" ++ UserName ++ "/" ++ "new" ++ "/"),
     filelib:ensure_dir(Domain ++ "/" ++ UserName ++ "/" ++ "tmp" ++ "/"),
-    filelib:ensure_dir(Domain ++ "/" ++ UserName ++ "/" ++ "sent" ++ "/"),
 
     {ok, Config} = config:read(config),
     UserStorage = config:get_key(user_storage, Config),
