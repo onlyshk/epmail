@@ -18,7 +18,7 @@
 -vsn('0.2').
 -author('kuleshovmail@gmail.com').
 
--include_lib("../include/pop.hrl").
+-include_lib("pop.hrl").
 
 -define(SERVER, ?MODULE).
 
