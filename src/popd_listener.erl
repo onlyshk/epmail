@@ -13,7 +13,7 @@
 
 -export([start_link/0, stop/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
-	 terminate/2, code_change/3, accept/1]).
+        terminate/2, code_change/3]).
 
 -vsn('0.2').
 -author('kuleshovmail@gmail.com').
@@ -65,11 +65,11 @@ init([]) ->
             {keepalive, false}, {ip,{0,0,0,0}}, {active, false}],
         
     case gen_tcp:listen(Port, Opts) of
-	 {ok, ListenSocket} ->
-	    spawn(?MODULE, accept, [ListenSocket]),
-	    {ok, #state{ listener = ListenSocket}};
-         {error, Reason} ->
-	     {stop, Reason}
+        {ok, ListenSocket} ->
+            spawn(fun() -> accept(ListenSocket) end),
+            {ok, #state{listener = ListenSocket}};
+        {error, Reason} ->
+            {stop, Reason}
     end.
 
 handle_call(_Request, _From, State) ->
