@@ -14,7 +14,7 @@
 -vsn('0.2').
 -author('kuleshovmail@gmail.com').
 
--include_lib("../include/smtp.hrl").
+-include_lib("smtp.hrl").
 
 %% API
 -export([stop/0]).
