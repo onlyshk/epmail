@@ -7,8 +7,4 @@
 %%% Created : 15 Jan 2011 by  <kuleshovmail@gmail.com>
 %%%-------------------------------------------------------------------
 
--record(state, {
-                socket,
-                client,
-                rcpt 
-               }).
+-record(state, {socket, client, rcpt}).

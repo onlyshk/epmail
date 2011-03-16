@@ -13,10 +13,13 @@
 
 -vsn('0.3').
 
+-include_lib("epmail.hrl").
+
 %% Application callbacks
 -export([start/2, stop/1]).
 
 start(normal, _StartArgs) ->
+    ?INFO_MSG("Starting application ~p~n", [?MODULE]),
     Sup = epmail_sup:start_link(),
     Sup.
 
