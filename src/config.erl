@@ -12,7 +12,7 @@
 -export([get_key/2]).
 -export([read/1]).
 
--vsn('0.2').
+-vsn('0.3').
 -author('kuleshovmail@gmail.com').
 
 get_key(_Key, []) ->

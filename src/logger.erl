@@ -9,7 +9,7 @@
 
 -module(logger).
 
--vsn('0.1').
+-vsn('0.3').
 -author('kuleshovmail@gmail.com').
 
 -behavior(gen_server).

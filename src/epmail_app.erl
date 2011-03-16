@@ -11,6 +11,8 @@
 
 -behaviour(application).
 
+-vsn('0.3').
+
 %% Application callbacks
 -export([start/2, stop/1]).
 

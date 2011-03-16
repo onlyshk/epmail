@@ -11,7 +11,7 @@
 
 -behaviour(gen_fsm).
 
--vsn('0.2').
+-vsn('0.3').
 -author('kuleshovmail@gmail.com').
 
 %% API

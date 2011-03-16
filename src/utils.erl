@@ -29,7 +29,7 @@
 
 -include_lib("kernel/include/inet.hrl").
 
--vsn('0.2').
+-vsn('0.3').
 -author('kuleshovmail@gmail.com').
 
 %
