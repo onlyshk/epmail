@@ -1,24 +1,25 @@
 ERL=erl
 APP_NAME=epmail
 NODE_NAME=epmail
+EFLAGS=-pa ebin -sname $(NODE_NAME)
 VSN=0.1
 
-all: $(wildcard src/*.erl)
-	$(ERL) -pa lib/*/ebin -I lib/*/include -make
+all: compile
 
-ebin/%.app: src/%.app.src
-	cp $< $@
+compile:
+	test -d ebin || mkdir ebin
+	$(ERL) $(EFLAGS) -make
+	cp $(APP_NAME).app ebin
 
 doc:	
-	$(ERL) -pa `pwd`/ebin \
-	-noshell \
-	-run edoc_run application  "'$(APP_NAME)'" '"."' '[{def,{vsn,"$(VSN)"}}]'
+	$(ERL) $(EFLAGS) -noshell \
+	-run edoc_run application "'$(APP_NAME)'" '"."' '[{def,{vsn,"$(VSN)"}}]'
 
 clean:
-	rm -fv ebin/*.beam
-	rm -fv erl_crash.dump
+	test ! -d doc || rm -rfv doc
+	rm -rfv erl_crash.dump ebin
+	find . -name "*~" -exec rm -fv {} \;
 
-run:
-	$(ERL) -pa `pwd`/ebin \
-	-boot start_sasl \/home/shk/pmail/include/pop.hrl
-	-sname $(NODE_NAME)
+# for testing purpose
+run: compile
+	$(ERL) $(EFLAGS)  -eval 'application:start($(APP_NAME)).'

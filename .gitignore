@@ -1,0 +1,4 @@
+ebin
+*.conf
+*.log
+erl_crash.dump
