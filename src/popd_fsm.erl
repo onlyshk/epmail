@@ -203,6 +203,26 @@ transaction(Event, State) ->
 	    catch _:_ -> gen_tcp:close(State#state.socket)
 	    end,   
 
+            %% TOP command
+	    %% TOP msg num
+	    %% +OK Top of message follows
+	    %% .
+	    try
+		case pop_messages:is_message_top(ReParseData) of
+		    {_, [MS, NUM]} ->
+			Mail = utils:get_file_path_by_num(Domain ++ "/" ++ State#state.username ++ "/new",
+			      							     list_to_integer(MS)),
+			Lines = utils:read_n_lines(Mail, list_to_integer(NUM)),
+			gen_tcp:send(State#state.socket, "+OK Top of message follows \r\n"),
+			gen_tcp:send(State#state.socket, Lines ++ "\r\n"),
+			gen_tcp:send(State#state.socket, "." ++ "\r\n"),
+		        transaction(Event, State);
+		    error ->
+			error
+		end
+	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    end,
+	    
 	    %% RETR command
 	    %% +OK || -ERR n message (m octets)
 	    %% < body message>
