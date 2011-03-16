@@ -15,7 +15,7 @@
 -author('kuleshovmail@gmail.com').
 
 %% API
--export([start_link/0, stop/0]).
+-export([start_link/0]).
 
 %% Supervisor callbacks
 -export([init/1]).
@@ -25,16 +25,13 @@ start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 init([]) ->
-    {ok, Config} = config:read(config),
-    UserStorage = config:get_key(user_storage, Config),
-    Pop3ServerStart = config:get_key(pop3_server_start, Config),
-    SmtpServerStart = config:get_key(smtp_server_start, Config),
-    Sqlite3DataBase = config:get_key(sqlite3_database, Config),
+    UserStorage = config:get_option(user_storage),
+    Pop3ServerStart = config:get_option(pop3_server_start),
+    SmtpServerStart = config:get_option(smtp_server_start),
+    Sqlite3DataBase = config:get_option(sqlite3_database),
     
     case UserStorage of
         mnesia ->
-            mnesia:create_schema([node()]),
-            mnesia:start(),
             mnesia:create_table(users, []);
         dets ->
             dets;
@@ -61,11 +58,8 @@ init([]) ->
 	(Pop3ServerStart == start) and (SmtpServerStart /= start) ->
 	    Children = [ListenerSup];
 	(Pop3ServerStart /= start) and (SmtpServerStart == start) ->
-	    Children = [SmtpServerStart]
+	    Children = [SmtpListenerSup]
     end,
 	
     {ok, {RestartStrategy, Children}}.
 
-    
-stop() ->
-    exit(whereis(?MODULE), shutdown).

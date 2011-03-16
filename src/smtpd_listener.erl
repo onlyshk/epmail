@@ -23,8 +23,7 @@
 -record(state, {listener}).
 
 start_link()  ->    
-    {ok, Config} = config:read(config),
-    UserStorage = config:get_key(user_storage, Config),
+    UserStorage = config:get_option(user_storage),
 
     case UserStorage of
         dets ->
@@ -37,8 +36,7 @@ start_link()  ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 accept(Socket) ->
-    {ok, Config} = config:read(config),
-    SmtpServerName = config:get_key(smtp_server_name, Config),
+    SmtpServerName = config:get_option(smtp_server_name),
    
     case gen_tcp:accept(Socket) of
         {ok, Sock} ->
@@ -59,10 +57,9 @@ stop() ->
 %
 init([]) ->
     process_flag(trap_exit, true),
-    {ok, Config} = config:read(config),
 
     IP = {0, 0, 0, 0}, % TODO: should be defined in configuration file
-    Port = config:get_key(smtp_port, Config),
+    Port = config:get_option(smtp_port),
     
     Opts = [list, {reuseaddr, true}, {packet, 0},
             {keepalive, false}, {ip, IP}, {active, false}],

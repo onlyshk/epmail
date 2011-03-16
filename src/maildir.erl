@@ -45,14 +45,13 @@ add_user(Domain, UserName, Password) ->
     filelib:ensure_dir(Domain ++ "/" ++ UserName ++ "/" ++ "new" ++ "/"),
     filelib:ensure_dir(Domain ++ "/" ++ UserName ++ "/" ++ "tmp" ++ "/"),
 
-    {ok, Config} = config:read(config),
-    UserStorage = config:get_key(user_storage, Config),
+    UserStorage = config:get_option(user_storage),
 
     %% | Postgresql data
-    Host = config:get_key(host, Config),
-    Database = config:get_key(database, Config), 
-    User = config:get_key(user, Config),
-    Login = config:get_key(login, Config),
+    Host = config:get_option(host),
+    Database = config:get_option(database),
+    User = config:get_option(user),
+    Login = config:get_option(login),
 
     case UserStorage of
 	mnesia ->
@@ -75,40 +74,34 @@ add_user(Domain, UserName, Password) ->
 % Deleting user from dets db
 %
 delete_user(UserName) ->
-    {ok, Config} = config:read(config),
-    UserStorage = config:get_key(user_storage, Config),
-
-    Host = config:get_key(host, Config),
-    Database = config:get_key(database, Config), 
-    User = config:get_key(user, Config),
-    Login = config:get_key(login, Config),
+    UserStorage = config:get_option(user_storage),
+    Host = config:get_option(host),
+    Database = config:get_option(database),
+    User = config:get_option(user),
+    Login = config:get_option(login),
 
     case UserStorage of
-	mnesia ->
-	    mnesia:transaction(fun() -> mnesia:delete({users, UserName}) end);
-	dets ->
-	    dets:delete(upDisk, {UserName, '_', '_'});
-	ets ->
-	    ets:delete(usersTable, {UserName, '_', '_'});
-	sqlite3 ->
-	    sqlite3:delete(user_db, users, {user, UserName});
-	postgresql ->
-	    {ok, Db} = pgsql:connect(Host, Database, User, Login),
-	    pgsql:pquery(Db, "DELETE FROM  mail_user  WHERE name = $1", [UserName])
+        mnesia ->
+            mnesia:transaction(fun() -> mnesia:delete({users, UserName}) end);
+        dets ->
+            dets:delete(upDisk, {UserName, '_', '_'});
+        ets ->
+            ets:delete(usersTable, {UserName, '_', '_'});
+        sqlite3 ->
+            sqlite3:delete(user_db, users, {user, UserName});
+        postgresql ->
+            {ok, Db} = pgsql:connect(Host, Database, User, Login),
+            pgsql:pquery(Db, "DELETE FROM  mail_user  WHERE name = $1", [UserName])
     end.
 %
 % Find domain by User Name
 %
 find_domain(UserName) ->
-    {ok, Config} = config:read(config),
-    UserStorage = config:get_key(user_storage, Config),
-
-    %% | Postgresql data
-    Host = config:get_key(host, Config),
-    Database = config:get_key(database, Config), 
-    User = config:get_key(user, Config),
-    Login = config:get_key(login, Config),
-
+    UserStorage = config:get_option(user_storage),
+    Host = config:get_option(host),
+    Database = config:get_option(database),
+    User = config:get_option(user),
+    Login = config:get_option(login),
 
     case UserStorage of
 	mnesia ->
@@ -137,8 +130,7 @@ find_domain(UserName) ->
 % Create user | password dets ot ets database
 %
 create_key_value_user_pass_db(UsersPath) ->
-    {ok, Config} = config:read(config),
-    UserStorage = config:get_key(user_storage, Config),
+    UserStorage = config:get_option(user_storage),
     
     case UserStorage of
 	dets ->
@@ -162,8 +154,7 @@ create_key_value_user_pass_db(UsersPath) ->
 % Destroy upDisk dets db
 %
 destroy() ->
-    {ok, Config} = config:read(config),
-    UserStorage = config:get_key(user_storage, Config),
+    UserStorage = config:get_option(user_storage),
 
     case UserStorage of
 	dets ->
@@ -178,14 +169,11 @@ destroy() ->
 % Check username's password
 %
 check_pass( UserName, Password) ->
-    {ok, Config} = config:read(config),
-    UserStorage = config:get_key(user_storage, Config),
-
-    %% | Postgresql data
-    Host = config:get_key(host, Config),
-    Database = config:get_key(database, Config), 
-    User = config:get_key(user, Config),
-    Login = config:get_key(login, Config),
+    UserStorage = config:get_option(user_storage),
+    Host = config:get_option(host),
+    Database = config:get_option(database),
+    User = config:get_option(user),
+    Login = config:get_option(login),
 
     case UserStorage of
 	mnesia ->

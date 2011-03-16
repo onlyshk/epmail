@@ -20,7 +20,10 @@
 
 start(normal, _StartArgs) ->
     ?INFO_MSG("Starting application ~p~n", [?MODULE]),
+    ok = init_mnesia(),
+    ok = config:start(),
     Sup = epmail_sup:start_link(),
+    io:format("Sup: ~p~n", [Sup]),
     Sup.
 
 stop(_State) ->
@@ -30,3 +33,7 @@ stop(_State) ->
 %%
 %% Internal API
 %%
+
+init_mnesia() ->
+    mnesia:create_schema([node()]),
+    mnesia:start().
