@@ -41,6 +41,9 @@ You can connect to servers by telnet or you can use mail client, thunderbird for
  3) Test it
  
  4) Pull request
+ 
+## Credits
+  Artem Teslenko (<https://github.com/ates>)
 
 ## Wiki
   EPmail wiki - <https://github.com/onlyshk/epmail/wiki>
