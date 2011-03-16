@@ -15,16 +15,13 @@
 -author('kuleshovmail@gmail.com').
 
 %% API
--export([start_link/1]).
--export([stop/0]).
+-export([start_link/0, stop/0]).
 
 %% Supervisor callbacks
 -export([init/1]).
 
--define(SERVER, ?MODULE).
-
 %%% API functions
-start_link(StartArgs) ->
+start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 init([]) ->
@@ -35,18 +32,18 @@ init([]) ->
     Sqlite3DataBase = config:get_key(sqlite3_database, Config),
     
     case UserStorage of
-	mnesia ->
-	    mnesia:create_schema([node()]),
-	    mnesia:start(),
-	    mnesia:create_table(users, []);
-	dets ->
-	    dets;
-	ets ->
-	    ets;
-	sqlite3 ->
-	    sqlite3:open(Sqlite3DataBase),
-	    TableInfo = [{user, text, [not_null]}, {password, text, [not_null]}, {domain, text, [not_null]}],
-	    ok = sqlite3:create_table(user_db, users, TableInfo)
+        mnesia ->
+            mnesia:create_schema([node()]),
+            mnesia:start(),
+            mnesia:create_table(users, []);
+        dets ->
+            dets;
+        ets ->
+            ets;
+        sqlite3 ->
+            sqlite3:open(Sqlite3DataBase),
+            TableInfo = [{user, text, [not_null]}, {password, text, [not_null]}, {domain, text, [not_null]}],
+            ok = sqlite3:create_table(user_db, users, TableInfo)
     end,
     
     RestartStrategy = {one_for_one, 5, 600},

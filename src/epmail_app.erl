@@ -16,15 +16,14 @@
 %% Application callbacks
 -export([start/2, stop/1]).
 
-start(_Type, StartArgs) ->
-    case epmail_sup:start_link(StartArgs) of
-	{ok, Pid} ->
-	    {ok, Pid};
-	Error ->
-	    Error
-    end.
-
+start(normal, _StartArgs) ->
+    Sup = epmail_sup:start_link(),
+    Sup.
 
 stop(_State) ->
   ok.
 
+
+%%
+%% Internal API
+%%
