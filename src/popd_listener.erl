@@ -19,6 +19,7 @@
 -author('kuleshovmail@gmail.com').
 
 -include_lib("pop.hrl").
+-include_lib("epmail.hrl").
 
 -define(SERVER, ?MODULE).
 
@@ -57,13 +58,16 @@ stop() ->
 init([]) ->
     process_flag(trap_exit, true),
  
+    IP = {0, 0, 0, 0},
     Port = config:get_option(pop3_port),
     
     Opts = [list, {reuseaddr, true}, 
-            {keepalive, false}, {ip,{0,0,0,0}}, {active, false}],
+            {keepalive, false}, {ip, IP}, {active, false}],
+    StrIP = inet_parse:ntoa(IP),
         
     case gen_tcp:listen(Port, Opts) of
         {ok, ListenSocket} ->
+            ?INFO_MSG("Starting POP3 server on ~s:~p~n", [StrIP, Port]),
             spawn(fun() -> accept(ListenSocket) end),
             {ok, #state{listener = ListenSocket}};
         {error, Reason} ->

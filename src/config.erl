@@ -22,10 +22,9 @@
 
 start() ->
     mnesia:create_table(config, [{disc_copies, [node()]},
-                                 {record_name, config},
-                                 {local_content, true},
                                  {attributes, record_info(fields, config)}]),
     mnesia:add_table_copy(config, node(), ram_copies),
+    mnesia:clear_table(config),
     Config = whereis_config(),
     load_file(Config).
 

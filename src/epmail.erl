@@ -7,7 +7,7 @@
 %%% Created : 30 Jan 2011 by  <kuleshovmail@gmail.com>
 %%%-------------------------------------------------------------------
 
--module(epmail_app).
+-module(epmail).
 
 -behaviour(application).
 
@@ -23,7 +23,6 @@ start(normal, _StartArgs) ->
     ok = init_mnesia(),
     ok = config:start(),
     Sup = epmail_sup:start_link(),
-    io:format("Sup: ~p~n", [Sup]),
     Sup.
 
 stop(_State) ->
@@ -36,4 +35,5 @@ stop(_State) ->
 
 init_mnesia() ->
     mnesia:create_schema([node()]),
-    mnesia:start().
+    mnesia:start(),
+    mnesia:wait_for_tables(mnesia:system_info(local_tables), infinity).

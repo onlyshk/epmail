@@ -43,7 +43,7 @@ init([]) ->
             ok = sqlite3:create_table(user_db, users, TableInfo)
     end,
     
-    RestartStrategy = {one_for_one, 5, 600},
+    RestartStrategy = {one_for_one, 10, 1},
  
     ListenerSup = {popd_listener_sup,
 		  {popd_listener_sup, start_link, []},

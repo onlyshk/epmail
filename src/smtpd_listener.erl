@@ -64,13 +64,14 @@ init([]) ->
     Opts = [list, {reuseaddr, true}, {packet, 0},
             {keepalive, false}, {ip, IP}, {active, false}],
     StrIP = inet_parse:ntoa(IP),
-        
+
     case gen_tcp:listen(Port, Opts) of
         {ok, ListenSocket} ->
             ?INFO_MSG("Starting SMTP server on ~s:~p~n", [StrIP, Port]),
             spawn(fun() -> accept(ListenSocket) end),
             {ok, #state{listener = ListenSocket}};
         {error, Reason} ->
+            ?ERROR_MSG("Cannot open tcp socket due to: ~p~n", [Reason]),
             {stop, Reason}
     end.
 
