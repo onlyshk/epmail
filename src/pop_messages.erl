@@ -17,6 +17,7 @@
 -export([is_message_retr/1]).
 -export([is_message_dele/1]).
 -export([is_message_uidl/1]).
+-export([is_message_top/1]).
 
 -vsn('0.3').
 -author('kuleshovmail@gmail.com').
@@ -201,3 +202,31 @@ is_message_uidl(Message) ->
       _ ->
 	   error
    end.
+
+%
+% POP3 TOP mes num 
+% 
+is_message_top([]) ->
+    error;
+is_message_top(Message)  ->
+    [H | T] = string:tokens(Message, " "),
+   
+    case [H | T] of
+	["top" | _]  ->
+	    {H,T};
+       
+	["top"] ->
+	    error;
+       
+	[_] ->
+	    error;
+
+	top ->
+	    error;
+       
+	[] ->
+	    error;
+
+	_ ->
+	    error
+    end.
