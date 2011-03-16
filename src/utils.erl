@@ -27,7 +27,7 @@
 
 -export([get_mx/1]).
 
--include_lib("kernel/src/inet_dns.hrl").
+-include_lib("kernel/include/inet.hrl").
 
 -vsn('0.2').
 -author('kuleshovmail@gmail.com').
@@ -168,8 +168,8 @@ split_mail_address(MailAddress) ->
 % get mx record
 %
 get_mx(Domain) ->
-    {ok, {hostent, Domain, _, _, _Len, List}} = inet_res:getbyname(Domain, mx),
-    List.
+    {ok, Result} = inet_res:getbyname(Domain, mx),
+    Result#hostent.h_addr_list.
 
 %
 % Generate random string
