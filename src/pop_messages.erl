@@ -210,13 +210,12 @@ is_message_top([]) ->
     error;
 is_message_top(Message)  ->
     [H | T] = string:tokens(Message, " "),
-   
     case [H | T] of
-	["top" | _]  ->
-	    {H,T};
-       
 	["top"] ->
 	    error;
+	
+	["top" | _]  ->
+	    {H, T};
        
 	[_] ->
 	    error;
