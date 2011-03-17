@@ -46,8 +46,7 @@ autorization(Event, State) ->
 	{ok, Data} ->
 	    ReParseData = string:to_lower(utils:trim(Data)),
 
-	    {ok, Config} = config:read(config),
-	    SmtpServerName = config:get_key(smtp_server_name, Config),
+	    SmtpServerName = config:get_option(smtp_server_name),
 
 	    %% HELO command
 	    try
@@ -200,10 +199,9 @@ recv_rcpt_transaction(Event, State) ->
 			gen_tcp:send(State#state.socket, "354 Enter mail, end with . on a line by itself \r\n"),
 			
 			{ok, Packet} = do_recv(State#state.socket, []),
-		        {ok, Config} = config:read(config),
-			Domain = config:get_key(domain, Config),
-			Port   = config:get_key(smtp_port, Config),
-			SmtpServerName = config:get_key(smtp_server_name, Config),
+			Domain = config:get_option(domain),
+			Port   = config:get_option(smtp_port),
+			SmtpServerName = config:get_option(smtp_server_name),
 			SplitAddressList = [string:tokens(S, "@") || S <- State#state.rcpt],  % utils:parse_to(lists:flatten(Packet))],
 
 			LocalList = [X || X <- SplitAddressList, Y <- Domain,   lists:last(X) == Y],

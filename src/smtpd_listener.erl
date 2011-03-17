@@ -13,48 +13,43 @@
 
 -export([start_link/0, stop/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
-	 terminate/2, code_change/3, accept/1]).
+        terminate/2, code_change/3]).
 
 -vsn('0.3').
 -author('kuleshovmail@gmail.com').
 
--record(smtp_state, {
-                listener 
-	 }).
+-include_lib("epmail.hrl").
 
--define(SERVER, ?MODULE).
+-record(state, {listener}).
 
 start_link()  ->    
-    {ok, Config} = config:read(config),
-    UserStorage = config:get_key(user_storage, Config),
+    UserStorage = config:get_option(user_storage),
 
     case UserStorage of
-	dets ->
-	    maildir:create_key_value_user_pass_db("User");
-	ets ->
-	    maildir:create_key_value_user_pass_db("User");
-	_ ->
-	    mnesia
+        dets ->
+            maildir:create_key_value_user_pass_db("User");
+        ets ->
+            maildir:create_key_value_user_pass_db("User");
+        _ ->
+            mnesia
     end,
-
-    gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 accept(Socket) ->
-    {ok, Config} = config:read(config),
-    SmtpServerName = config:get_key(smtp_server_name, Config),
+    SmtpServerName = config:get_option(smtp_server_name),
    
     case gen_tcp:accept(Socket) of
-	{ok, Sock} ->
-	     {ok, Pid} = smtp_fsm_sup:start_child(Sock, []),
-	     smtp_fsm:set_socket(Pid),
-             gen_tcp:send(Sock, integer_to_list(220) ++ " " ++ SmtpServerName ++ " " ++ "Simple Mail Transfer Service Ready\r\n"),
-  	     accept(Socket);
-	{error, Reason} ->
-	    Reason
+        {ok, Sock} ->
+            {ok, Pid} = smtp_fsm_sup:start_child(Sock, []),
+            smtp_fsm:set_socket(Pid),
+            gen_tcp:send(Sock, integer_to_list(220) ++ " " ++ SmtpServerName ++ " " ++ "Simple Mail Transfer Service Ready\r\n"),
+            accept(Socket);
+        {error, Reason} ->
+            Reason
     end.    
     
 stop() ->
-    io:format("SMTP server stop! \n "),
+    ?INFO_MSG("Stopping SMTP server~n", []),
     gen_server:cast(?MODULE, stop).
 
 % 
@@ -62,19 +57,22 @@ stop() ->
 %
 init([]) ->
     process_flag(trap_exit, true),
-    {ok, Config} = config:read(config),
 
-    Port = config:get_key(smtp_port, Config),
+    IP = {0, 0, 0, 0}, % TODO: should be defined in configuration file
+    Port = config:get_option(smtp_port),
     
-    Opts = [list, {reuseaddr, true}, {packet,0}, 
-            {keepalive, false}, {ip,{0,0,0,0}}, {active, false}],
-        
+    Opts = [list, {reuseaddr, true}, {packet, 0},
+            {keepalive, false}, {ip, IP}, {active, false}],
+    StrIP = inet_parse:ntoa(IP),
+
     case gen_tcp:listen(Port, Opts) of
-	 {ok, ListenSocket} ->
-	    spawn(?MODULE, accept, [ListenSocket]),
-	    {ok, #smtp_state{ listener = ListenSocket}};
-         {error, Reason} ->
-	     {stop, Reason}
+        {ok, ListenSocket} ->
+            ?INFO_MSG("Starting SMTP server on ~s:~p~n", [StrIP, Port]),
+            spawn(fun() -> accept(ListenSocket) end),
+            {ok, #state{listener = ListenSocket}};
+        {error, Reason} ->
+            ?ERROR_MSG("Cannot open tcp socket due to: ~p~n", [Reason]),
+            {stop, Reason}
     end.
 
 handle_call(_Request, _From, State) ->
@@ -93,7 +91,7 @@ handle_info(_Info, State) ->
 %
 terminate(_Reason, State) ->
     maildir:destroy(),
-    gen_tcp:close(State#smtp_state.listener),
+    gen_tcp:close(State#state.listener),
     ok.
 
 %
@@ -101,4 +99,3 @@ terminate(_Reason, State) ->
 %
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
-%

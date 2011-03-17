@@ -53,8 +53,7 @@ stop() ->
     logger:db_backup(),
     
     io:format("The log file backuped \n"),
-    {ok, Config} = config:read(config),
-    LogPath = config:get_key(error_logger_path, Config),
+    LogPath = config:option(error_logger_path),
     file:delete(LogPath),
 
     io:format("Temp log storage deleted \n"),

@@ -15,6 +15,4 @@
 -define(CRLF_BIN, <<13,10>>).
 -endif.
 
--record(state, {
-                listener 
-               }).
+-record(state, {listener}).
