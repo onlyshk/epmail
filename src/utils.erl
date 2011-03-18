@@ -161,8 +161,8 @@ get_tail([_ | T]) ->
 split_mail_address([]) ->
     [];
 split_mail_address(MailAddress) ->
-    Add1 = string:strip(MailAddress, both, $<),
-    Add2 = string:strip(Add1, both, $>).
+    Add = string:strip(MailAddress, both, $<),
+    string:strip(Add, both, $>).
 
 %
 %
