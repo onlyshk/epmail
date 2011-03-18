@@ -16,5 +16,6 @@
   {registered, [epmail_sup, popd_listener_sup, smtpd_listener_sup, pop_fsm_sup, smtp_fsm_sup, 
                popd_listener, smtp_listener]},
   {applications, [kernel, stdlib]},
-  {mod, {epmail, []}}
+  {mod, {epmail, []}},
+  {env, [{config, "epmail.conf.sample"}]}
 ]}.
