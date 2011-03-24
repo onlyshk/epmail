@@ -62,7 +62,9 @@ autorization(Event, State) ->
 		    error ->
 			error  
 		end
-	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    catch _:_ ->
+		    gen_tcp:close(State#state.socket),
+		    supervisor:delete_child(smtp_fsm_sup, smtp_fsm)
 	    end,
 
 	    %% EHLO command
@@ -82,7 +84,9 @@ autorization(Event, State) ->
 		    error ->
 			error  
 		end
-	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    catch _:_ ->
+		    gen_tcp:close(State#state.socket),
+		    supervisor:delete_child(smtp_fsm_sup, smtp_fsm)
 	    end,
 	    
 	    try
@@ -100,7 +104,9 @@ autorization(Event, State) ->
 			gen_tcp:send(State#state.socket, pop_messages:err_message()),
 			autorization(Event, State )
 		end
-	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    catch _:_ ->
+		    gen_tcp:close(State#state.socket),
+		    supervisor:delete_child(smtp_fsm_sup, smtp_fsm)
 	    end;
 
 	{error, closed} ->
@@ -127,7 +133,9 @@ mail_transaction(Event, State) ->
 		    error ->
 			error
 		end
-	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    catch _:_ ->
+		    gen_tcp:close(State#state.socket),
+		    supervisor:delete_child(smtp_fsm_sup, smtp_fsm)
 	    end,
 
 	    %% MAIL FROM command
@@ -144,7 +152,9 @@ mail_transaction(Event, State) ->
 		    error ->
 			error  
 		end
-	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    catch _:_ ->
+		    gen_tcp:close(State#state.socket),
+		    supervisor:delete_child(smtp_fsm_sup, smtp_fsm)
 	    end,
 
 	    try
@@ -159,7 +169,9 @@ mail_transaction(Event, State) ->
 			gen_tcp:send(State#state.socket, "250 OK \r\n"),
 			mail_transaction(Event, State#state{client = underfined})
 		    end
-	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    catch _:_ ->
+		    gen_tcp:close(State#state.socket),
+		    supervisor:delete_child(smtp_fsm_sup, smtp_fsm)
 	    end;
 	{error, closed} ->
 	    ok
@@ -184,7 +196,9 @@ recv_rcpt_transaction(Event, State) ->
 		    error ->
 			error  
 		end
-	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    catch _:_ ->
+		    gen_tcp:close(State#state.socket),
+		    supervisor:delete_child(smtp_fsm_sup, smtp_fsm)
 	    end,
 
 	    try
@@ -329,7 +343,9 @@ recv_rcpt_transaction(Event, State) ->
 			gen_tcp:send(State#state.socket, pop_messages:err_message()),
 			mail_transaction(Event, State )
 		end
-	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    catch _:_ ->
+		    gen_tcp:close(State#state.socket),
+		    supervisor:delete_child(smtp_fsm_sup, smtp_fsm)
 	    end;
 
 	

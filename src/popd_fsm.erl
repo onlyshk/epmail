@@ -63,7 +63,9 @@ autorization(Event, State) ->
 		    error ->
 			error  
 		end
-	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    catch _:_ ->
+		    gen_tcp:close(State#state.socket),
+		    supervisor:delete_child(pop_fsm_sup, popd_fsm)
 	    end,
 
 	    %% password getting
@@ -96,7 +98,9 @@ autorization(Event, State) ->
 		    error ->
 			error
 		end
-	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    catch _:_ ->
+		    gen_tcp:close(State#state.socket),
+		    supervisor:delete_child(pop_fsm_sup, popd_fsm)	     
 	    end,
 	          
 	    try
@@ -111,7 +115,9 @@ autorization(Event, State) ->
 			gen_tcp:send(State#state.socket, pop_messages:err_message()),
 			autorization(Event, State)
 		end
-	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    catch _:_ ->
+		    gen_tcp:close(State#state.socket),
+		    supervisor:delete_child(pop_fsm_sup, popd_fsm)
 	    end;
 
 	{error, closed} ->
@@ -166,7 +172,9 @@ transaction(Event, State) ->
 			error ->
 				error
 	    	    end
-	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    catch _:_ ->
+		    gen_tcp:close(State#state.socket),
+		    supervisor:delete_child(pop_fsm_sup, popd_fsm)
 	    end,
 	    
 	    try
@@ -200,7 +208,9 @@ transaction(Event, State) ->
 		    error ->
 			error
 		end
-	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    catch _:_ ->
+		    gen_tcp:close(State#state.socket),
+		    supervisor:delete_child(pop_fsm_sup, popd_fsm)
 	    end,   
 
             %% TOP command
@@ -220,7 +230,9 @@ transaction(Event, State) ->
 		    error ->
 			error
 		end
-	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    catch _:_ ->
+		    gen_tcp:close(State#state.socket),
+		    supervisor:delete_child(pop_fsm_sup, popd_fsm)
 	    end,
 	    
 	    %% RETR command
@@ -243,7 +255,9 @@ transaction(Event, State) ->
 		    error ->
 			error
 		end
-	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    catch _:_ ->
+		    gen_tcp:close(State#state.socket),
+		    supervisor:delete_child(pop_fsm_sup, popd_fsm)
 	    end,
 
 	    try
@@ -257,7 +271,9 @@ transaction(Event, State) ->
 		    error ->
 			error
 		end
-	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    catch _:_ ->
+		    gen_tcp:close(State#state.socket),
+		    supervisor:delete_child(pop_fsm_sup, popd_fsm)
 	    end,
 	    
 	    try
@@ -289,7 +305,9 @@ transaction(Event, State) ->
 			gen_tcp:send(State#state.socket, pop_messages:err_message()),
 			transaction(Event, State )
 		end
-	    catch _:_ -> gen_tcp:close(State#state.socket)
+	    catch _:_ ->
+		    gen_tcp:close(State#state.socket),
+		    supervisor:delete_child(pop_fsm_sup, popd_fsm)
 	    end;
 	    
 	{error, closed} ->
